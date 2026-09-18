@@ -14,7 +14,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.Refresh
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -121,9 +120,9 @@ class HomeScreen : Screen {
                             )
                             Spacer(Modifier.size(Spacing.sm))
                             SecondaryButton(
-                                text = stringResource(R.string.home_shuffle),
-                                onClick = { onEventDispatcher(HomeContract.HomeEvent.ShuffleHero) },
-                                leadingIcon = Icons.Rounded.Refresh
+                                text = stringResource(R.string.home_next_recipe),
+                                onClick = { onEventDispatcher(HomeContract.HomeEvent.NextHero) },
+                                trailingIcon = Icons.AutoMirrored.Rounded.ArrowForward
                             )
                         }
                     }

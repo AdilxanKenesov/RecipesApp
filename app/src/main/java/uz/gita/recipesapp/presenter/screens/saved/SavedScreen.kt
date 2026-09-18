@@ -1,7 +1,6 @@
 package uz.gita.recipesapp.presenter.screens.saved
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -15,8 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Bookmarks
-import androidx.compose.material.icons.rounded.History
-import androidx.compose.material.icons.rounded.ShoppingBasket
+import androidx.compose.material.icons.rounded.Checklist
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +31,6 @@ import cafe.adriel.voyager.hilt.getViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
 import uz.gita.recipesapp.domain.module.ShoppingItemUiData
-import uz.gita.recipesapp.domain.module.ViewedGroup
 import uz.gita.recipesapp.presenter.ui.components.OshxonaScaffold
 import uz.gita.recipesapp.presenter.ui.components.RecipeListCard
 import uz.gita.recipesapp.presenter.ui.components.ScreenTopBar
@@ -44,7 +41,6 @@ import uz.gita.recipesapp.presenter.ui.preview.SampleData
 import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
 import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
-import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
@@ -71,7 +67,6 @@ class SavedScreen : Screen {
                 SegmentedControl(
                     options = listOf(
                         stringResource(R.string.saved_tab_favorites),
-                        stringResource(R.string.saved_tab_viewed),
                         stringResource(R.string.saved_tab_shopping)
                     ),
                     selectedIndex = state.section.ordinal,
@@ -89,7 +84,6 @@ class SavedScreen : Screen {
                 Box(modifier = Modifier.weight(1f)) {
                     when (state.section) {
                         SavedContract.SavedSection.FAVORITES -> FavoritesSection(state, onEventDispatcher)
-                        SavedContract.SavedSection.VIEWED -> ViewedSection(state, onEventDispatcher)
                         SavedContract.SavedSection.SHOPPING -> ShoppingSection(state, onEventDispatcher)
                     }
                 }
@@ -142,72 +136,6 @@ class SavedScreen : Screen {
     }
 
     @Composable
-    private fun ViewedSection(
-        state: SavedContract.SavedUiState,
-        onEventDispatcher: (SavedContract.SavedEvent) -> Unit
-    ) {
-        val colors = MaterialTheme.oshxona
-        if (state.viewed.isEmpty()) {
-            EmptySection(
-                icon = Icons.Rounded.History,
-                title = stringResource(R.string.saved_empty_viewed_title),
-                body = stringResource(R.string.saved_empty_viewed_body),
-                onEventDispatcher = onEventDispatcher
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = Spacing.md,
-                    end = Spacing.md,
-                    bottom = Spacing.xxl
-                )
-            ) {
-                item {
-                    SectionHeader(
-                        title = stringResource(R.string.saved_viewed_limit),
-                        actionText = stringResource(R.string.saved_viewed_clear),
-                        onActionClick = { onEventDispatcher(SavedContract.SavedEvent.ClearHistory) }
-                    )
-                    Spacer(Modifier.size(Spacing.sm))
-                }
-
-                ViewedGroup.entries.forEach { group ->
-                    val groupItems = state.viewed.filter { it.group == group }
-                    if (groupItems.isNotEmpty()) {
-                        item(key = "group_${group.name}") {
-                            Text(
-                                text = stringResource(
-                                    when (group) {
-                                        ViewedGroup.TODAY -> R.string.saved_viewed_today
-                                        ViewedGroup.YESTERDAY -> R.string.saved_viewed_yesterday
-                                        ViewedGroup.EARLIER -> R.string.saved_viewed_earlier
-                                    }
-                                ),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colors.inkMuted,
-                                modifier = Modifier.padding(vertical = Spacing.xs)
-                            )
-                        }
-                        items(items = groupItems, key = { it.recipe.id }) { viewed ->
-                            RecipeListCard(
-                                recipe = viewed.recipe,
-                                onClick = {
-                                    onEventDispatcher(SavedContract.SavedEvent.OpenRecipe(viewed.recipe.id))
-                                },
-                                onBookmarkClick = {
-                                    onEventDispatcher(SavedContract.SavedEvent.ToggleFavorite(viewed.recipe.id))
-                                },
-                                modifier = Modifier.padding(bottom = Spacing.sm)
-                            )
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    @Composable
     private fun ShoppingSection(
         state: SavedContract.SavedUiState,
         onEventDispatcher: (SavedContract.SavedEvent) -> Unit
@@ -215,7 +143,7 @@ class SavedScreen : Screen {
         val colors = MaterialTheme.oshxona
         if (state.shopping.isEmpty()) {
             EmptySection(
-                icon = Icons.Rounded.ShoppingBasket,
+                icon = Icons.Rounded.Checklist,
                 title = stringResource(R.string.saved_empty_shopping_title),
                 body = stringResource(R.string.saved_empty_shopping_body),
                 onEventDispatcher = onEventDispatcher
@@ -331,7 +259,6 @@ class SavedScreen : Screen {
             SavedContent(
                 state = SavedContract.SavedUiState(
                     favorites = SampleData.favorites,
-                    viewed = SampleData.viewed,
                     shopping = SampleData.shoppingItems
                 ),
                 onEventDispatcher = { }

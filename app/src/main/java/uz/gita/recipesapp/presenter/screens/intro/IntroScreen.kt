@@ -3,6 +3,9 @@ package uz.gita.recipesapp.presenter.screens.intro
 import androidx.activity.compose.BackHandler
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +24,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -108,15 +113,21 @@ class IntroScreen : Screen {
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = stringResource(R.string.intro_skip),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.inkMuted,
-                    modifier = Modifier
-                        .clip(Shapes.pill)
-                        .scaleClickable { onEventDispatcher(IntroContract.IntroEvent.Skip) }
-                        .padding(horizontal = Spacing.sm, vertical = Spacing.sm)
-                )
+                AnimatedVisibility(
+                    visible = !state.isLastPage,
+                    enter = fadeIn(),
+                    exit = fadeOut()
+                ) {
+                    Text(
+                        text = stringResource(R.string.intro_skip),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.inkMuted,
+                        modifier = Modifier
+                            .clip(Shapes.pill)
+                            .scaleClickable { onEventDispatcher(IntroContract.IntroEvent.Skip) }
+                            .padding(horizontal = Spacing.sm, vertical = Spacing.sm)
+                    )
+                }
             }
 
             HorizontalPager(
@@ -181,10 +192,9 @@ class IntroScreen : Screen {
             }
 
             PrimaryButton(
-                text = stringResource(
-                    if (state.isLastPage) R.string.intro_choose_language else R.string.intro_next
-                ),
+                text = stringResource(R.string.intro_next),
                 onClick = { onEventDispatcher(IntroContract.IntroEvent.Next) },
+                trailingIcon = Icons.AutoMirrored.Rounded.ArrowForward,
                 shape = Shapes.pill,
                 modifier = Modifier
                     .navigationBarsPadding()

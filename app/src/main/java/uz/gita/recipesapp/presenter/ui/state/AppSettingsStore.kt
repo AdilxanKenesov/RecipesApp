@@ -9,7 +9,7 @@ import javax.inject.Singleton
 @Singleton
 class AppSettingsStore @Inject constructor() {
 
-    private val _themeMode = MutableStateFlow(ThemeMode.SYSTEM)
+    private val _themeMode = MutableStateFlow(ThemeMode.LIGHT)
     val themeMode: StateFlow<ThemeMode> = _themeMode.asStateFlow()
 
     private val _language = MutableStateFlow(AppLanguage.UZ)

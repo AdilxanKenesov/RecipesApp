@@ -33,17 +33,28 @@ interface SearchContract {
     data class SearchUiState(
         val mode: SearchMode = SearchMode.BY_NAME,
         val query: String = "",
+        val nameResults: List<RecipeUiData>? = null,
+        val isNameLoading: Boolean = false,
         val ingredientInput: String = "",
         val ingredients: List<String> = emptyList(),
-        val results: List<RecipeUiData>? = null,
-        val isLoading: Boolean = false,
+        val ingredientResults: List<RecipeUiData>? = null,
+        val isIngredientLoading: Boolean = false,
+        val searchedIngredients: List<String>? = null,
         val hasError: Boolean = false,
         val recent: List<String> = emptyList(),
         val quickIngredients: List<String> = emptyList(),
         val categories: List<CategoryUiData> = emptyList()
     ) {
-        val limitReached: Boolean get() = (results?.size ?: 0) >= 40
-        val showNotFound: Boolean get() = results != null && results.isEmpty()
+        val nameLimitReached: Boolean get() = (nameResults?.size ?: 0) >= 40
+        val ingredientLimitReached: Boolean get() = (ingredientResults?.size ?: 0) >= 40
+        val showNameNotFound: Boolean get() = nameResults != null && nameResults.isEmpty()
+        val showIngredientNotFound: Boolean get() = ingredientResults != null && ingredientResults.isEmpty()
+        val findCount: Int
+            get() = ingredients.size +
+                if (ingredientInput.isNotBlank() && ingredientInput.trim() !in ingredients) 1 else 0
+        val showFindButton: Boolean
+            get() = findCount > 0 &&
+                (ingredientInput.isNotBlank() || searchedIngredients != ingredients)
     }
 
     sealed interface SideEffect

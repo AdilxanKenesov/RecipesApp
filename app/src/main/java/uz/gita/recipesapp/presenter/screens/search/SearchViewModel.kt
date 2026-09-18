@@ -26,9 +26,7 @@ class SearchViewModel @Inject constructor(
             tabSwitcher.pendingIngredientSearch.collect { pending ->
                 if (pending) {
                     intent {
-                        reduce {
-                            state.copy(mode = SearchContract.SearchMode.BY_INGREDIENT, results = null)
-                        }
+                        reduce { state.copy(mode = SearchContract.SearchMode.BY_INGREDIENT) }
                     }
                     tabSwitcher.consumeIngredientSearch()
                 }
@@ -39,7 +37,7 @@ class SearchViewModel @Inject constructor(
     override fun onEventDispatcher(event: SearchContract.SearchEvent) {
         when (event) {
             is SearchContract.SearchEvent.ModeChanged -> intent {
-                reduce { state.copy(mode = event.mode, results = null, isLoading = false) }
+                if (state.mode != event.mode) reduce { state.copy(mode = event.mode) }
             }
 
             is SearchContract.SearchEvent.QueryChanged -> {
@@ -62,8 +60,11 @@ class SearchViewModel @Inject constructor(
 
             is SearchContract.SearchEvent.QuickIngredientClicked -> intent {
                 reduce {
-                    if (state.ingredients.contains(event.name)) state
-                    else state.copy(ingredients = state.ingredients + event.name)
+                    if (state.ingredients.contains(event.name)) {
+                        state.copy(ingredients = state.ingredients - event.name)
+                    } else {
+                        state.copy(ingredients = state.ingredients + event.name)
+                    }
                 }
             }
 
@@ -72,11 +73,13 @@ class SearchViewModel @Inject constructor(
             is SearchContract.SearchEvent.OpenRecipe -> direction.openRecipe(event.recipeId)
 
             is SearchContract.SearchEvent.ToggleFavorite -> intent {
+                val toggle: (RecipeUiData) -> RecipeUiData = {
+                    if (it.id == event.recipeId) it.copy(isFavorite = !it.isFavorite) else it
+                }
                 reduce {
                     state.copy(
-                        results = state.results?.map {
-                            if (it.id == event.recipeId) it.copy(isFavorite = !it.isFavorite) else it
-                        }
+                        nameResults = state.nameResults?.map(toggle),
+                        ingredientResults = state.ingredientResults?.map(toggle)
                     )
                 }
             }
@@ -93,10 +96,23 @@ class SearchViewModel @Inject constructor(
             }
 
             SearchContract.SearchEvent.FindByIngredients -> intent {
-                reduce { state.copy(isLoading = true) }
+                val pending = state.ingredientInput.trim()
+                val ingredients = if (pending.isNotEmpty() && pending !in state.ingredients) {
+                    state.ingredients + pending
+                } else {
+                    state.ingredients
+                }
+                if (ingredients.isEmpty()) return@intent
+                reduce { state.copy(ingredients = ingredients, ingredientInput = "", isIngredientLoading = true) }
                 delay(400)
-                val found = searchByIngredients(state.ingredients)
-                reduce { state.copy(isLoading = false, results = found) }
+                val found = searchByIngredients(ingredients)
+                reduce {
+                    state.copy(
+                        isIngredientLoading = false,
+                        ingredientResults = found,
+                        searchedIngredients = ingredients
+                    )
+                }
             }
 
             SearchContract.SearchEvent.ClearRecent -> intent {
@@ -104,7 +120,7 @@ class SearchViewModel @Inject constructor(
             }
 
             SearchContract.SearchEvent.Retry -> intent {
-                reduce { state.copy(hasError = false, isLoading = false) }
+                reduce { state.copy(hasError = false, isNameLoading = false, isIngredientLoading = false) }
             }
         }
     }
@@ -113,17 +129,17 @@ class SearchViewModel @Inject constructor(
         searchJob?.cancel()
         val normalized = query.normalizeQuery()
         if (normalized.length < 2) {
-            intent { reduce { state.copy(results = null, isLoading = false) } }
+            intent { reduce { state.copy(nameResults = null, isNameLoading = false) } }
             return
         }
         searchJob = intent {
-            reduce { state.copy(isLoading = true) }
+            reduce { state.copy(isNameLoading = true) }
             if (!immediate) delay(400)
             val found = searchByName(normalized)
             reduce {
                 state.copy(
-                    isLoading = false,
-                    results = found,
+                    isNameLoading = false,
+                    nameResults = found,
                     recent = (listOf(query) + state.recent).distinct().take(6)
                 )
             }

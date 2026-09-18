@@ -2,9 +2,7 @@ package uz.gita.recipesapp.presenter.screens.categoryrecipes
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import uz.gita.recipesapp.presenter.ui.components.PagingFooterState
 import uz.gita.recipesapp.presenter.ui.preview.SampleData
 import javax.inject.Inject
 
@@ -38,15 +36,8 @@ class CategoryRecipesViewModel @Inject constructor(
                 }
             }
 
-            CategoryRecipesContract.CategoryRecipesEvent.LoadMore -> intent {
-                if (state.footerState != PagingFooterState.Idle) return@intent
-                reduce { state.copy(footerState = PagingFooterState.Loading) }
-                delay(600)
-                reduce { state.copy(footerState = PagingFooterState.End) }
-            }
-
             CategoryRecipesContract.CategoryRecipesEvent.Retry -> intent {
-                reduce { state.copy(hasError = false, footerState = PagingFooterState.Idle) }
+                reduce { state.copy(hasError = false) }
             }
 
             CategoryRecipesContract.CategoryRecipesEvent.Back -> direction.back()

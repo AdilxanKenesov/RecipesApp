@@ -3,7 +3,6 @@ package uz.gita.recipesapp.presenter.screens.saved
 import org.orbitmvi.orbit.OrbitContainerHost
 import uz.gita.recipesapp.domain.module.RecipeUiData
 import uz.gita.recipesapp.domain.module.ShoppingItemUiData
-import uz.gita.recipesapp.domain.module.ViewedRecipeUiData
 
 interface SavedContract {
     interface SavedViewModel : OrbitContainerHost<SavedUiState, SavedUiState, SideEffect> {
@@ -12,7 +11,6 @@ interface SavedContract {
 
     enum class SavedSection {
         FAVORITES,
-        VIEWED,
         SHOPPING
     }
 
@@ -21,7 +19,6 @@ interface SavedContract {
         data class OpenRecipe(val recipeId: Int) : SavedEvent
         data class ToggleFavorite(val recipeId: Int) : SavedEvent
         data class ToggleShoppingItem(val itemId: Int) : SavedEvent
-        data object ClearHistory : SavedEvent
         data object ClearShopping : SavedEvent
         data object OpenCategories : SavedEvent
         data object OpenAllRecipes : SavedEvent
@@ -30,7 +27,6 @@ interface SavedContract {
     data class SavedUiState(
         val section: SavedSection = SavedSection.FAVORITES,
         val favorites: List<RecipeUiData> = emptyList(),
-        val viewed: List<ViewedRecipeUiData> = emptyList(),
         val shopping: List<ShoppingItemUiData> = emptyList()
     )
 

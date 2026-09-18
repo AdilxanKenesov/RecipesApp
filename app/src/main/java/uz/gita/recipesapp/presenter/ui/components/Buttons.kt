@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
@@ -41,17 +42,20 @@ fun PrimaryButton(
     leadingIcon: ImageVector? = null,
     trailingIcon: ImageVector? = null,
     shape: Shape = Shapes.button,
+    fillWidth: Boolean = true,
+    height: Dp = Sizes.buttonHeightLarge,
+    elevated: Boolean = true,
 ) {
     val colors = MaterialTheme.oshxona
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .height(Sizes.buttonHeightLarge)
-            .then(if (enabled) Modifier.primaryShadow() else Modifier)
+            .then(if (fillWidth) Modifier.fillMaxWidth() else Modifier)
+            .height(height)
+            .then(if (enabled && elevated) Modifier.primaryShadow() else Modifier)
             .clip(shape)
             .background(if (enabled) colors.primary else colors.surfaceAlt)
             .scaleClickable(enabled = enabled, onClick = onClick)
-            .padding(horizontal = Spacing.md),
+            .padding(horizontal = if (fillWidth) Spacing.md else Spacing.lg),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -89,6 +93,7 @@ fun SecondaryButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     leadingIcon: ImageVector? = null,
+    trailingIcon: ImageVector? = null,
 ) {
     val colors = MaterialTheme.oshxona
     Row(
@@ -121,6 +126,15 @@ fun SecondaryButton(
             color = if (enabled) colors.primaryInk else colors.inkDisabled,
             textAlign = TextAlign.Center
         )
+        if (trailingIcon != null) {
+            Spacer(Modifier.size(Spacing.xs))
+            Icon(
+                imageVector = trailingIcon,
+                contentDescription = null,
+                tint = if (enabled) colors.primaryInk else colors.inkDisabled,
+                modifier = Modifier.size(Sizes.iconSm)
+            )
+        }
     }
 }
 

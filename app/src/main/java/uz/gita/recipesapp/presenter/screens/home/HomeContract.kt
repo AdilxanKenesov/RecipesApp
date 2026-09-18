@@ -11,7 +11,7 @@ interface HomeContract {
 
     sealed interface HomeEvent {
         data object OpenSettings : HomeEvent
-        data object ShuffleHero : HomeEvent
+        data object NextHero : HomeEvent
         data object OpenAllCategories : HomeEvent
         data object OpenAllRecipes : HomeEvent
         data object OpenIngredientSearch : HomeEvent

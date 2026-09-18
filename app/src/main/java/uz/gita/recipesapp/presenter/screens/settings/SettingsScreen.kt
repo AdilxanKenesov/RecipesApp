@@ -101,7 +101,6 @@ class SettingsScreen : Screen {
                         SettingsOption(
                             label = stringResource(
                                 when (mode) {
-                                    ThemeMode.SYSTEM -> R.string.settings_appearance_system
                                     ThemeMode.LIGHT -> R.string.settings_appearance_light
                                     ThemeMode.DARK -> R.string.settings_appearance_dark
                                 }
@@ -110,24 +109,6 @@ class SettingsScreen : Screen {
                             onClick = {
                                 onEventDispatcher(SettingsContract.SettingsEvent.ThemeChanged(mode))
                             }
-                        )
-                    }
-                }
-
-                Spacer(Modifier.size(Spacing.xl))
-
-                SettingsGroup(title = stringResource(R.string.settings_storage)) {
-                    Column(modifier = Modifier.padding(Spacing.md)) {
-                        Text(
-                            text = stringResource(R.string.settings_storage_count, state.savedCount),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.ink
-                        )
-                        Spacer(Modifier.size(Spacing.xxs))
-                        Text(
-                            text = stringResource(R.string.settings_storage_hint),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.inkFaint
                         )
                     }
                 }
@@ -196,7 +177,7 @@ class SettingsScreen : Screen {
     private fun SettingsPreview() {
         OshxonaTheme {
             SettingsContent(
-                state = SettingsContract.SettingsUiState(savedCount = 12),
+                state = SettingsContract.SettingsUiState(),
                 onEventDispatcher = { }
             )
         }

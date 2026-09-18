@@ -3,7 +3,6 @@ package uz.gita.recipesapp.presenter.screens.settings
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
 import uz.gita.recipesapp.presenter.ui.state.AppSettingsStore
 import javax.inject.Inject
 
@@ -32,8 +31,7 @@ class SettingsViewModel @Inject constructor(
     override val container = orbitContainer<SettingsContract.SettingsUiState, SettingsContract.SideEffect>(
         SettingsContract.SettingsUiState(
             language = settings.language.value,
-            themeMode = settings.themeMode.value,
-            savedCount = SampleData.favorites.size + SampleData.viewed.size
+            themeMode = settings.themeMode.value
         )
     )
 }

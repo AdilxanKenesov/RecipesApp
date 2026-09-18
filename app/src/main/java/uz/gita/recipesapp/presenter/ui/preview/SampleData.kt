@@ -6,8 +6,6 @@ import uz.gita.recipesapp.domain.module.RecipeDetailUiData
 import uz.gita.recipesapp.domain.module.RecipeUiData
 import uz.gita.recipesapp.domain.module.ShoppingItemUiData
 import uz.gita.recipesapp.domain.module.StepUiData
-import uz.gita.recipesapp.domain.module.ViewedGroup
-import uz.gita.recipesapp.domain.module.ViewedRecipeUiData
 
 object SampleData {
 
@@ -77,13 +75,6 @@ object SampleData {
     )
 
     val favorites = recipes.filter { it.isFavorite }
-
-    val viewed = listOf(
-        ViewedRecipeUiData(recipes[2], ViewedGroup.TODAY),
-        ViewedRecipeUiData(recipes[3], ViewedGroup.TODAY),
-        ViewedRecipeUiData(recipes[6], ViewedGroup.YESTERDAY),
-        ViewedRecipeUiData(recipes[9], ViewedGroup.EARLIER),
-    )
 
     val shoppingItems = listOf(
         ShoppingItemUiData(1, 1, "Toshkent oshi", "1 kg", "guruch"),

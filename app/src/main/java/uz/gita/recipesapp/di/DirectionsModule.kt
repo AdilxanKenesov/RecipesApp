@@ -11,6 +11,8 @@ import uz.gita.recipesapp.presenter.screens.categories.CategoriesContract
 import uz.gita.recipesapp.presenter.screens.categories.CategoriesDirection
 import uz.gita.recipesapp.presenter.screens.categoryrecipes.CategoryRecipesContract
 import uz.gita.recipesapp.presenter.screens.categoryrecipes.CategoryRecipesDirection
+import uz.gita.recipesapp.presenter.screens.cooking.CookingContract
+import uz.gita.recipesapp.presenter.screens.cooking.CookingDirection
 import uz.gita.recipesapp.presenter.screens.home.HomeContract
 import uz.gita.recipesapp.presenter.screens.home.HomeDirection
 import uz.gita.recipesapp.presenter.screens.intro.IntroContract
@@ -75,4 +77,8 @@ interface DirectionsModule {
     @Binds
     @ViewModelScoped
     fun bindSettingsScreenDirection(impl: SettingsDirection): SettingsContract.Direction
+
+    @Binds
+    @ViewModelScoped
+    fun bindCookingScreenDirection(impl: CookingDirection): CookingContract.Direction
 }

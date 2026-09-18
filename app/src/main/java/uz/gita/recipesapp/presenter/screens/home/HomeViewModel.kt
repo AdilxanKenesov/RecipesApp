@@ -21,9 +21,11 @@ class HomeViewModel @Inject constructor(
 
             HomeContract.HomeEvent.OpenIngredientSearch -> direction.openIngredientSearch()
 
-            HomeContract.HomeEvent.ShuffleHero -> intent {
-                val next = SampleData.recipes.filter { it.id != state.hero?.id }.randomOrNull()
-                reduce { state.copy(hero = next ?: state.hero) }
+            HomeContract.HomeEvent.NextHero -> intent {
+                val recipes = SampleData.recipes
+                if (recipes.isEmpty()) return@intent
+                val index = recipes.indexOfFirst { it.id == state.hero?.id }
+                reduce { state.copy(hero = recipes[(index + 1) % recipes.size]) }
             }
 
             HomeContract.HomeEvent.Retry -> intent {

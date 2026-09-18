@@ -6,7 +6,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,12 +36,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val language by settings.language.collectAsStateWithLifecycle()
             val themeMode by settings.themeMode.collectAsStateWithLifecycle()
-            val systemDark = isSystemInDarkTheme()
-            val darkTheme = when (themeMode) {
-                ThemeMode.SYSTEM -> systemDark
-                ThemeMode.LIGHT -> false
-                ThemeMode.DARK -> true
-            }
+            val darkTheme = themeMode == ThemeMode.DARK
 
             DisposableEffect(darkTheme) {
                 enableEdgeToEdge(

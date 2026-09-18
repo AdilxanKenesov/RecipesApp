@@ -2,8 +2,6 @@ package uz.gita.recipesapp.presenter.screens.recipedetail
 
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.viewmodel.orbitContainer
 import uz.gita.recipesapp.domain.module.IngredientUiData
 import uz.gita.recipesapp.domain.module.RecipeDetailUiData
@@ -14,8 +12,6 @@ import javax.inject.Inject
 class RecipeDetailViewModel @Inject constructor(
     private val direction: RecipeDetailContract.Direction
 ) : ViewModel(), RecipeDetailContract.RecipeDetailViewModel {
-
-    private var timerJob: Job? = null
 
     override fun onEventDispatcher(event: RecipeDetailContract.RecipeDetailEvent) {
         when (event) {
@@ -56,57 +52,12 @@ class RecipeDetailViewModel @Inject constructor(
 
             is RecipeDetailContract.RecipeDetailEvent.OpenRecipe -> direction.openRecipe(event.recipeId)
 
-            is RecipeDetailContract.RecipeDetailEvent.OpenTimer -> {
-                stopTimer()
-                val seconds = (event.step.timerMinutes ?: 0) * 60
-                intent {
-                    reduce {
-                        state.copy(
-                            timer = RecipeDetailContract.TimerUiState(
-                                stepNumber = event.step.number,
-                                totalSeconds = seconds,
-                                remainingSeconds = seconds
-                            )
-                        )
-                    }
-                }
-            }
-
-            RecipeDetailContract.RecipeDetailEvent.CloseTimer -> {
-                stopTimer()
-                intent { reduce { state.copy(timer = null) } }
-            }
-
-            RecipeDetailContract.RecipeDetailEvent.ToggleTimer -> intent {
-                val timer = state.timer ?: return@intent
-                when {
-                    timer.isFinished -> Unit
-                    timer.isRunning -> {
-                        stopTimer()
-                        reduce { state.copy(timer = timer.copy(isRunning = false)) }
-                    }
-                    else -> {
-                        reduce { state.copy(timer = timer.copy(isRunning = true)) }
-                        startTimer()
-                    }
-                }
-            }
-
-            RecipeDetailContract.RecipeDetailEvent.ResetTimer -> {
-                stopTimer()
-                intent {
-                    reduce {
-                        state.copy(
-                            timer = state.timer?.let {
-                                it.copy(remainingSeconds = it.totalSeconds, isRunning = false)
-                            }
-                        )
-                    }
-                }
+            RecipeDetailContract.RecipeDetailEvent.StartCooking -> intent {
+                state.recipe?.let { direction.openCooking(it.id) }
             }
 
             RecipeDetailContract.RecipeDetailEvent.OpenShoppingSheet -> intent {
-                reduce { state.copy(shoppingSelection = ingredientIds(state.recipe)) }
+                reduce { state.copy(shoppingSelection = missingIngredientIds(state.recipe)) }
             }
 
             RecipeDetailContract.RecipeDetailEvent.CloseShoppingSheet -> intent {
@@ -161,28 +112,17 @@ class RecipeDetailViewModel @Inject constructor(
         }
     }
 
-    private fun startTimer() {
-        timerJob?.cancel()
-        timerJob = intent {
-            while (state.timer?.let { it.isRunning && it.remainingSeconds > 0 } == true) {
-                delay(1000)
-                reduce {
-                    val timer = state.timer ?: return@reduce state
-                    val remaining = (timer.remainingSeconds - 1).coerceAtLeast(0)
-                    state.copy(timer = timer.copy(remainingSeconds = remaining, isRunning = remaining > 0))
-                }
-            }
-        }
-    }
-
-    private fun stopTimer() {
-        timerJob?.cancel()
-        timerJob = null
-    }
-
     private fun ingredientIds(recipe: RecipeDetailUiData?): Set<Int> =
         recipe?.ingredients
             ?.filterIsInstance<IngredientUiData.Item>()
+            ?.map { it.id }
+            ?.toSet()
+            ?: emptySet()
+
+    private fun missingIngredientIds(recipe: RecipeDetailUiData?): Set<Int> =
+        recipe?.ingredients
+            ?.filterIsInstance<IngredientUiData.Item>()
+            ?.filterNot { it.isChecked }
             ?.map { it.id }
             ?.toSet()
             ?: emptySet()

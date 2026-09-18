@@ -26,12 +26,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.OpenInNew
-import androidx.compose.material.icons.rounded.Pause
+import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Replay
+import androidx.compose.material.icons.rounded.PlaylistAdd
+import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Share
-import androidx.compose.material.icons.rounded.ShoppingBasket
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -65,7 +64,6 @@ import uz.gita.recipesapp.R
 import uz.gita.recipesapp.domain.module.IngredientUiData
 import uz.gita.recipesapp.domain.module.RecipeDetailUiData
 import uz.gita.recipesapp.presenter.ui.components.BookmarkButton
-import uz.gita.recipesapp.presenter.ui.components.CountdownRing
 import uz.gita.recipesapp.presenter.ui.components.GlassBottomSheet
 import uz.gita.recipesapp.presenter.ui.components.IngredientGroupHeader
 import uz.gita.recipesapp.presenter.ui.components.IngredientRow
@@ -75,26 +73,23 @@ import uz.gita.recipesapp.presenter.ui.components.PrimaryButton
 import uz.gita.recipesapp.presenter.ui.components.RecipeGridCard
 import uz.gita.recipesapp.presenter.ui.components.RecipeImage
 import uz.gita.recipesapp.presenter.ui.components.RecipeListCard
-import uz.gita.recipesapp.presenter.ui.components.SecondaryButton
 import uz.gita.recipesapp.presenter.ui.components.SheetHandle
 import uz.gita.recipesapp.presenter.ui.components.SheetShape
-import uz.gita.recipesapp.presenter.ui.components.StepItem
 import uz.gita.recipesapp.presenter.ui.components.glassOnImageStyle
 import uz.gita.recipesapp.presenter.ui.components.glassStyle
 import uz.gita.recipesapp.presenter.ui.components.glassTopEdge
 import uz.gita.recipesapp.presenter.ui.components.rememberLastNonNull
 import uz.gita.recipesapp.presenter.ui.preview.SampleData
 import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
+import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Overlay
 import uz.gita.recipesapp.presenter.ui.theme.Overline
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
 import uz.gita.recipesapp.presenter.ui.util.cleanRecipeTitle
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
-import java.util.Locale
 
 class RecipeDetailScreen(
     private val recipeId: Int = 1
@@ -150,7 +145,6 @@ class RecipeDetailScreen(
 
         val hazeState = rememberHazeState()
         val scaffoldState = rememberBottomSheetScaffoldState()
-        val shownTimer = rememberLastNonNull(state.timer)
         val shownSelection = rememberLastNonNull(state.shoppingSelection)
 
         BoxWithConstraints(
@@ -203,19 +197,11 @@ class RecipeDetailScreen(
                     .padding(start = Spacing.md, end = Spacing.md, top = Spacing.lg, bottom = Spacing.sm)
             ) {
                 PrimaryButton(
-                    text = stringResource(R.string.detail_add_to_shopping),
-                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenShoppingSheet) },
-                    leadingIcon = Icons.Rounded.ShoppingBasket,
+                    text = stringResource(R.string.detail_start_cooking),
+                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.StartCooking) },
+                    leadingIcon = Icons.Rounded.PlayArrow,
                     shape = Shapes.pill
                 )
-            }
-
-            GlassBottomSheet(
-                visible = state.timer != null,
-                onDismiss = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.CloseTimer) },
-                hazeState = hazeState
-            ) {
-                shownTimer?.let { TimerSheet(it, onEventDispatcher) }
             }
 
             GlassBottomSheet(
@@ -366,7 +352,7 @@ class RecipeDetailScreen(
                     bottom = Sizes.buttonHeightLarge + Spacing.xxl + Spacing.md
                 )
             ) {
-                item { AuthorRow(recipe, onEventDispatcher) }
+                item { AuthorRow(recipe) }
 
                 item {
                     Spacer(Modifier.size(Spacing.md))
@@ -384,11 +370,7 @@ class RecipeDetailScreen(
                     Spacer(Modifier.size(Spacing.lg))
                     MetaRow(recipe)
                     Spacer(Modifier.size(Spacing.lg))
-                    Text(
-                        text = stringResource(R.string.detail_ingredients),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = colors.ink
-                    )
+                    IngredientsHeader(onEventDispatcher)
                 }
 
                 items(items = recipe.ingredients, key = { ingredient ->
@@ -414,23 +396,8 @@ class RecipeDetailScreen(
                     Spacer(Modifier.size(Spacing.lg))
                     HorizontalDivider(color = colors.hairline)
                     Spacer(Modifier.size(Spacing.lg))
-                    Text(
-                        text = stringResource(R.string.detail_steps),
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = colors.ink
-                    )
-                    Spacer(Modifier.size(Spacing.md))
-                }
-
-                items(items = recipe.steps, key = { "step_${it.number}" }) { step ->
-                    StepItem(
-                        step = step,
-                        timerLabel = step.timerMinutes?.let { stringResource(R.string.detail_timer, it) },
-                        onTimerClick = {
-                            onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenTimer(step))
-                        },
-                        modifier = Modifier.padding(bottom = Spacing.lg)
-                    )
+                    PreparationSummary(recipe, onEventDispatcher)
+                    Spacer(Modifier.size(Spacing.xl))
                 }
 
                 if (state.related.isNotEmpty()) {
@@ -459,38 +426,12 @@ class RecipeDetailScreen(
                     }
                 }
 
-                item {
-                    Row(
-                        modifier = Modifier
-                            .scaleClickable {
-                                onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenInBrowser)
-                            }
-                            .padding(vertical = Spacing.sm),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.OpenInNew,
-                            contentDescription = null,
-                            tint = colors.primaryInk,
-                            modifier = Modifier.size(Sizes.iconSm)
-                        )
-                        Text(
-                            text = stringResource(R.string.common_open_in_browser),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colors.primaryInk
-                        )
-                    }
-                }
             }
         }
     }
 
     @Composable
-    private fun AuthorRow(
-        recipe: RecipeDetailUiData,
-        onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
-    ) {
+    private fun AuthorRow(recipe: RecipeDetailUiData) {
         val colors = MaterialTheme.oshxona
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -522,12 +463,6 @@ class RecipeDetailScreen(
                     color = colors.ink
                 )
             }
-            BookmarkButton(
-                isFavorite = recipe.isFavorite,
-                onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.ToggleFavorite) },
-                tint = colors.onPrimary,
-                background = colors.primary
-            )
         }
     }
 
@@ -589,66 +524,116 @@ class RecipeDetailScreen(
     }
 
     @Composable
-    private fun TimerSheet(
-        timer: RecipeDetailContract.TimerUiState,
+    private fun IngredientsHeader(
         onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
     ) {
         val colors = MaterialTheme.oshxona
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text(
-                text = stringResource(R.string.timer_title, timer.stepNumber),
-                style = MaterialTheme.typography.titleLarge,
-                color = colors.ink
-            )
-            Spacer(Modifier.size(Spacing.lg))
-            CountdownRing(progress = timer.progress) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = formatTime(timer.remainingSeconds),
-                        style = MaterialTheme.typography.displayMedium.copy(fontFeatureSettings = "tnum"),
-                        color = colors.ink
+        Column {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.detail_ingredients),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = colors.ink,
+                    modifier = Modifier.weight(1f)
+                )
+                Row(
+                    modifier = Modifier
+                        .clip(Shapes.pill)
+                        .background(colors.primaryTint)
+                        .scaleClickable {
+                            onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenShoppingSheet)
+                        }
+                        .height(Sizes.touchTarget)
+                        .padding(horizontal = Spacing.sm),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.xxs)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.PlaylistAdd,
+                        contentDescription = null,
+                        tint = colors.primaryInk,
+                        modifier = Modifier.size(Sizes.iconSm)
                     )
-                    if (timer.isFinished) {
-                        Text(
-                            text = stringResource(R.string.timer_done),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = colors.primaryInk
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.detail_add_to_list_short),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.primaryInk
+                    )
                 }
             }
-            Spacer(Modifier.size(Spacing.lg))
-            if (timer.isFinished) {
-                PrimaryButton(
-                    text = stringResource(R.string.timer_reset),
-                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.ResetTimer) },
-                    leadingIcon = Icons.Rounded.Replay,
-                    shape = Shapes.pill
-                )
-            } else {
-                PrimaryButton(
-                    text = stringResource(
-                        when {
-                            timer.isRunning -> R.string.timer_pause
-                            timer.isStarted -> R.string.timer_resume
-                            else -> R.string.timer_start
-                        }
-                    ),
-                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.ToggleTimer) },
-                    leadingIcon = if (timer.isRunning) Icons.Rounded.Pause else Icons.Rounded.PlayArrow,
-                    shape = Shapes.pill
-                )
-                Spacer(Modifier.size(Spacing.sm))
-                SecondaryButton(
-                    text = stringResource(R.string.timer_reset),
-                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.ResetTimer) },
-                    enabled = timer.isStarted,
-                    leadingIcon = Icons.Rounded.Replay
+            Spacer(Modifier.size(Spacing.xxs))
+            Text(
+                text = stringResource(R.string.detail_ingredients_hint),
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.inkFaint
+            )
+            Spacer(Modifier.size(Spacing.xs))
+        }
+    }
+
+    @Composable
+    private fun PreparationSummary(
+        recipe: RecipeDetailUiData,
+        onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
+    ) {
+        val colors = MaterialTheme.oshxona
+        val timedSteps = recipe.steps.filter { it.timerMinutes != null }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(Shapes.card)
+                .background(colors.surface)
+                .scaleClickable { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.StartCooking) }
+                .padding(Spacing.md),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(Sizes.categoryIconBox)
+                    .clip(Shapes.image)
+                    .background(colors.accentTint),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Rounded.Restaurant,
+                    contentDescription = null,
+                    tint = colors.accentInk,
+                    modifier = Modifier.size(Sizes.icon)
                 )
             }
+            Spacer(Modifier.size(Spacing.sm))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = stringResource(R.string.detail_steps),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.ink
+                )
+                Text(
+                    text = stringResource(R.string.detail_steps_count, recipe.steps.size),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.inkMuted
+                )
+                if (timedSteps.isNotEmpty()) {
+                    Text(
+                        text = stringResource(
+                            R.string.detail_timers_summary,
+                            timedSteps.size,
+                            timedSteps.sumOf { it.timerMinutes ?: 0 }
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.inkFaint
+                    )
+                }
+            }
+            Icon(
+                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                contentDescription = null,
+                tint = colors.primaryInk,
+                modifier = Modifier.size(Sizes.icon)
+            )
         }
     }
 
@@ -717,7 +702,7 @@ class RecipeDetailScreen(
                 text = stringResource(R.string.shopping_confirm, selection.size),
                 onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.ConfirmShopping) },
                 enabled = selection.isNotEmpty(),
-                leadingIcon = Icons.Rounded.ShoppingBasket,
+                leadingIcon = Icons.Rounded.PlaylistAdd,
                 shape = Shapes.pill
             )
         }
@@ -778,9 +763,6 @@ class RecipeDetailScreen(
             }
         }
     }
-
-    private fun formatTime(seconds: Int): String =
-        String.format(Locale.ROOT, "%02d:%02d", seconds / 60, seconds % 60)
 
     @ThemePreview
     @Composable

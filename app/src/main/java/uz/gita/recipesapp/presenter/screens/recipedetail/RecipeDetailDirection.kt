@@ -1,6 +1,7 @@
 package uz.gita.recipesapp.presenter.screens.recipedetail
 
 import uz.gita.recipesapp.navigation.AppNavigator
+import uz.gita.recipesapp.presenter.screens.cooking.CookingScreen
 import uz.gita.recipesapp.presenter.screens.main.MainScreen
 import uz.gita.recipesapp.presenter.ui.state.MainTab
 import uz.gita.recipesapp.presenter.ui.state.TabSwitcher
@@ -22,5 +23,9 @@ class RecipeDetailDirection @Inject constructor(
     override fun openHome() {
         tabSwitcher.switchTo(MainTab.HOME)
         navigator.backTo { it is MainScreen }
+    }
+
+    override fun openCooking(recipeId: Int) {
+        navigator.navigateTo(CookingScreen(recipeId))
     }
 }

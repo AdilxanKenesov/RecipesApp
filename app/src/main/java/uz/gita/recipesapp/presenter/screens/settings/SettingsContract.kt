@@ -17,8 +17,7 @@ interface SettingsContract {
 
     data class SettingsUiState(
         val language: AppLanguage = AppLanguage.UZ,
-        val themeMode: ThemeMode = ThemeMode.SYSTEM,
-        val savedCount: Int = 0
+        val themeMode: ThemeMode = ThemeMode.LIGHT
     )
 
     sealed interface SideEffect

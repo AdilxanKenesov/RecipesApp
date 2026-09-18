@@ -33,10 +33,6 @@ class SavedViewModel @Inject constructor(
                 }
             }
 
-            SavedContract.SavedEvent.ClearHistory -> intent {
-                reduce { state.copy(viewed = emptyList()) }
-            }
-
             SavedContract.SavedEvent.ClearShopping -> intent {
                 reduce { state.copy(shopping = emptyList()) }
             }
@@ -50,7 +46,6 @@ class SavedViewModel @Inject constructor(
     override val container = orbitContainer<SavedContract.SavedUiState, SavedContract.SideEffect>(
         SavedContract.SavedUiState(
             favorites = SampleData.favorites,
-            viewed = SampleData.viewed,
             shopping = SampleData.shoppingItems
         )
     )
