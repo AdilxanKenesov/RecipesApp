@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pazanda</string>
+
+    <string name="cd_back">Назад</string>
+    <string name="cd_share">Поделиться</string>
+    <string name="cd_settings">Настройки</string>
+    <string name="cd_search">Поиск</string>
+    <string name="cd_play">Открыть видео</string>
+    <string name="cd_bookmark_add">Добавить в избранное</string>
+    <string name="cd_bookmark_remove">Убрать из избранного</string>
+    <string name="cd_clear">Очистить</string>
+    <string name="cd_remove">Удалить</string>
+    <string name="cd_shuffle">Другой рецепт</string>
+
+    <string name="common_retry">Повторить попытку</string>
+    <string name="common_retry_short">Повторить</string>
+    <string name="common_all">Все</string>
+    <string name="common_open_in_browser">Открыть в браузере</string>
+
+    <string name="nav_home">Главная</string>
+    <string name="nav_categories">Категории</string>
+    <string name="nav_search">Поиск</string>
+    <string name="nav_saved">Сохранённое</string>
+
+    <string name="badge_video">Видео</string>
+
+    <string name="splash_title">Секреты кухни</string>
+    <string name="splash_tagline">Простые и вкусные рецепты каждый день</string>
+    <string name="splash_start">Начать</string>
+
+    <string name="intro_skip">Пропустить</string>
+    <string name="intro_next">Далее</string>
+    <string name="intro_first_title">Тысячи рецептов в одном месте</string>
+    <string name="intro_first_body">От завтрака до десерта — готовая подборка рецептов на каждый день.</string>
+    <string name="intro_second_title">Что есть в холодильнике?</string>
+    <string name="intro_second_body">Укажите продукты, которые у вас есть, и мы покажем, что из них приготовить.</string>
+
+    <string name="language_title">Выберите язык</string>
+    <string name="language_uz">O\'zbekcha</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_start">Начать</string>
+    <string name="language_hint">Язык можно изменить позже в Настройках</string>
+
+    <string name="home_hero_overline">Рецепт дня</string>
+    <string name="home_next_recipe">Следующий</string>
+    <string name="home_categories">Категории</string>
+    <string name="home_fridge_title">Что есть в холодильнике?</string>
+    <string name="home_fridge_body">Укажите продукты — подберём подходящие рецепты.</string>
+    <string name="home_fridge_action">Искать по продуктам</string>
+    <string name="home_recipes">Рецепты</string>
+    <string name="home_all_recipes">Все %1$d рецептов</string>
+
+    <string name="all_recipes_title">Все рецепты</string>
+    <string name="all_recipes_total">%1$d рецептов</string>
+
+    <string name="categories_title">Категории</string>
+    <string name="categories_empty_section">Пока пусто</string>
+    <string name="categories_count">%1$d шт.</string>
+
+    <string name="search_title">Поиск</string>
+    <string name="search_tab_by_name">По названию</string>
+    <string name="search_tab_by_ingredient">По продуктам</string>
+    <string name="search_hint_name">Введите название рецепта</string>
+    <string name="search_hint_ingredient">Добавьте продукт</string>
+    <string name="search_initial_title">Что будем искать?</string>
+    <string name="search_initial_body">Введите название рецепта или выберите одну из категорий ниже.</string>
+    <string name="search_min_chars">Введите минимум 2 символа</string>
+    <string name="search_recent">Недавние запросы</string>
+    <string name="search_recent_clear">Очистить историю</string>
+    <string name="search_results_title">Результаты поиска</string>
+    <string name="search_limit_hint">Показано не более 40 результатов. Уточните запрос, чтобы найти точнее.</string>
+    <string name="search_notfound_title">Ничего не найдено</string>
+    <string name="search_notfound_body">Попробуйте сократить запрос или переключить режим поиска.</string>
+    <string name="search_quick_ingredients">Быстрый выбор</string>
+    <string name="search_find_by_ingredients">Найти по %1$d продуктам</string>
+    <string name="search_ingredient_empty">Напишите, что есть дома, или выберите ниже — подберём рецепты из этих продуктов.</string>
+
+    <string name="detail_ingredients">Ингредиенты</string>
+    <string name="detail_steps">Приготовление</string>
+    <string name="detail_more_from">Ещё из раздела «%1$s»</string>
+    <string name="detail_add_to_shopping">Добавить в список ингредиентов</string>
+    <string name="detail_added_to_shopping">Добавлено в список ингредиентов</string>
+    <string name="detail_timer">Таймер на %1$d мин</string>
+    <string name="detail_meta_ingredients">%1$d ингредиентов</string>
+    <string name="detail_meta_steps">%1$d шагов</string>
+    <string name="detail_notfound_title">Рецепт не найден</string>
+    <string name="detail_notfound_body">Этот рецепт удалён или ссылка неверна.</string>
+    <string name="detail_go_home">На главную</string>
+    <string name="detail_suggestions">Вместо него</string>
+
+    <string name="detail_author">Автор</string>
+    <string name="detail_meta_ingredients_label">Ингредиенты</string>
+    <string name="detail_meta_steps_label">Шаги</string>
+    <string name="detail_meta_category_label">Категория</string>
+    <string name="timer_title">Таймер: шаг %1$d</string>
+    <string name="timer_start">Старт</string>
+    <string name="timer_pause">Пауза</string>
+    <string name="timer_resume">Продолжить</string>
+    <string name="timer_reset">Сбросить</string>
+    <string name="timer_done">Готово!</string>
+    <string name="shopping_selected">Выбрано: %1$d</string>
+    <string name="shopping_select_all">Выбрать все</string>
+    <string name="shopping_clear_selection">Снять выбор</string>
+    <string name="shopping_confirm">Добавить: %1$d</string>
+    <string name="cd_close">Закрыть</string>
+
+    <string name="detail_add_to_list_short">В список</string>
+    <string name="detail_ingredients_hint">Отметьте, что есть дома, — остальное добавим в список</string>
+    <string name="detail_start_cooking">Начать готовить</string>
+    <string name="detail_steps_count">Шагов: %1$d</string>
+    <string name="detail_timers_summary">Таймеры: %1$d · всего %2$d мин</string>
+    <string name="cooking_step_label">Шаг %1$d</string>
+    <string name="cooking_progress">%1$d / %2$d</string>
+    <string name="cooking_next">Далее</string>
+    <string name="cooking_skip">Пропустить</string>
+    <string name="cooking_finish">Завершить</string>
+    <string name="cooking_done_title">Приятного аппетита!</string>
+    <string name="cooking_done_body">Выполнено шагов: %2$d из %1$d</string>
+    <string name="cooking_back_to_recipe">Вернуться к рецепту</string>
+    <string name="cd_active_timer">Перейти к активному таймеру</string>
+
+    <string name="saved_title">Сохранённое</string>
+    <string name="saved_tab_favorites">Избранное</string>
+    <string name="saved_tab_shopping">Список</string>
+    <string name="saved_favorites_hint">Избранное открывается и без интернета</string>
+    <string name="saved_shopping_clear">Очистить список</string>
+    <string name="saved_empty_favorites_title">В избранном пусто</string>
+    <string name="saved_empty_favorites_body">Сохраните понравившийся рецепт кнопкой закладки — он появится здесь.</string>
+    <string name="saved_empty_shopping_title">Список пуст</string>
+    <string name="saved_empty_shopping_body">Добавьте ингредиенты, которых нет дома, — в магазине отмечайте их здесь.</string>
+    <string name="saved_empty_browse">Смотреть рецепты</string>
+    <string name="saved_empty_categories">Перейти к категориям</string>
+
+    <string name="settings_title">Настройки</string>
+    <string name="settings_language">Язык</string>
+    <string name="settings_appearance">Оформление</string>
+    <string name="settings_appearance_light">Светлое</string>
+    <string name="settings_appearance_dark">Тёмное</string>
+
+    <string name="state_error_title">Что-то пошло не так</string>
+    <string name="state_error_body">Не удалось загрузить рецепты. Проверьте сеть и повторите попытку.</string>
+    <string name="state_empty_title">Пока пусто</string>
+    <string name="state_empty_body">Здесь ещё нет рецептов.</string>
+    <string name="state_offline_title">Нет интернета</string>
+    <string name="state_offline_body">Сохранённые рецепты доступны, остальное загрузится при появлении сети.</string>
+    <string name="state_open_cache">Открыть сохранённые</string>
+    <string name="offline_banner">Режим без интернета</string>
+
+    <string name="paging_end">Показано всё</string>
+    <string name="paging_error">Ошибка загрузки</string>
+</resources>
