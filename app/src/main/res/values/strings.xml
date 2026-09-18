@@ -1,3 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Recipes App</string>
+    <string name="app_name">Pazanda</string>
+
+    <string name="cd_back">Orqaga</string>
+    <string name="cd_share">Ulashish</string>
+    <string name="cd_settings">Sozlamalar</string>
+    <string name="cd_search">Qidirish</string>
+    <string name="cd_play">Videoni ochish</string>
+    <string name="cd_bookmark_add">Sevimlilarga qo\'shish</string>
+    <string name="cd_bookmark_remove">Sevimlilardan olib tashlash</string>
+    <string name="cd_clear">Tozalash</string>
+    <string name="cd_remove">O\'chirish</string>
+    <string name="cd_shuffle">Boshqa retsept</string>
+
+    <string name="common_retry">Qayta urinish</string>
+    <string name="common_retry_short">Qayta</string>
+    <string name="common_all">Barchasi</string>
+    <string name="common_open_in_browser">Brauzerda ochish</string>
+
+    <string name="nav_home">Bosh sahifa</string>
+    <string name="nav_categories">Kategoriya</string>
+    <string name="nav_search">Qidiruv</string>
+    <string name="nav_saved">Saqlangan</string>
+
+    <string name="badge_video">Video</string>
+
+    <string name="splash_title">Oshxona Sirlari</string>
+    <string name="splash_tagline">Oson va mazali taomlar retsepti har kuni</string>
+    <string name="splash_start">Boshlash</string>
+
+    <string name="intro_skip">O\'tkazib yuborish</string>
+    <string name="intro_next">Keyingi</string>
+    <string name="intro_first_title">Minglab retsept, bir joyda</string>
+    <string name="intro_first_body">Nonushtadan shirinlikkacha — har kuni uchun tayyor retseptlar to\'plami.</string>
+    <string name="intro_second_title">Muzlatgichda nima bor?</string>
+    <string name="intro_second_body">Bor masalliqlarni yozing, ular bilan tayyorlanadigan taomlarni ko\'rsatamiz.</string>
+
+    <string name="language_title">Tilni tanlang</string>
+    <string name="language_uz">O\'zbekcha</string>
+    <string name="language_ru">Русский</string>
+    <string name="language_start">Boshlash</string>
+    <string name="language_hint">Tilni keyin Sozlamalarda o\'zgartirish mumkin</string>
+
+    <string name="home_hero_overline">Kun retsepti</string>
+    <string name="home_next_recipe">Keyingisi</string>
+    <string name="home_categories">Kategoriyalar</string>
+    <string name="home_fridge_title">Muzlatgichda nima bor?</string>
+    <string name="home_fridge_body">Bor masalliqlarni yozing — mos retseptlarni topamiz.</string>
+    <string name="home_fridge_action">Masalliq bo\'yicha qidirish</string>
+    <string name="home_recipes">Retseptlar</string>
+    <string name="home_all_recipes">Barcha %1$d retsept</string>
+
+    <string name="all_recipes_title">Barcha retseptlar</string>
+    <string name="all_recipes_total">%1$d ta retsept</string>
+
+    <string name="categories_title">Kategoriyalar</string>
+    <string name="categories_empty_section">Hozircha bo\'sh</string>
+    <string name="categories_count">%1$d ta</string>
+
+    <string name="search_title">Qidiruv</string>
+    <string name="search_tab_by_name">Nom bo\'yicha</string>
+    <string name="search_tab_by_ingredient">Masalliq bo\'yicha</string>
+    <string name="search_hint_name">Retsept nomini yozing</string>
+    <string name="search_hint_ingredient">Masalliq qo\'shing</string>
+    <string name="search_initial_title">Nima qidiramiz?</string>
+    <string name="search_initial_body">Retsept nomini yozing yoki quyidagi kategoriyalardan birini tanlang.</string>
+    <string name="search_min_chars">Kamida 2 ta belgi yozing</string>
+    <string name="search_recent">Oxirgi qidiruvlar</string>
+    <string name="search_recent_clear">Tarixni tozalash</string>
+    <string name="search_results_title">Qidiruv natijalari</string>
+    <string name="search_limit_hint">Natijalar 40 ta bilan chegaralangan. Aniqroq topish uchun so\'rovni to\'ldiring.</string>
+    <string name="search_notfound_title">Hech narsa topilmadi</string>
+    <string name="search_notfound_body">So\'rovni qisqartirib ko\'ring yoki boshqa rejimga o\'ting.</string>
+    <string name="search_quick_ingredients">Tez tanlash</string>
+    <string name="search_find_by_ingredients">%1$d masalliq bo\'yicha topish</string>
+    <string name="search_ingredient_empty">Uyda bor narsalarni yozing yoki pastdan tanlang — ular bilan tayyorlanadigan retseptlarni topamiz.</string>
+
+    <string name="detail_ingredients">Masalliqlar</string>
+    <string name="detail_steps">Tayyorlash</string>
+    <string name="detail_more_from">Yana %1$s</string>
+    <string name="detail_add_to_shopping">Masalliqlar ro\'yxatiga qo\'shish</string>
+    <string name="detail_added_to_shopping">Masalliqlar ro\'yxatiga qo\'shildi</string>
+    <string name="detail_timer">%1$d daqiqa taymer</string>
+    <string name="detail_meta_ingredients">%1$d masalliq</string>
+    <string name="detail_meta_steps">%1$d qadam</string>
+    <string name="detail_notfound_title">Retsept topilmadi</string>
+    <string name="detail_notfound_body">Bu retsept o\'chirilgan yoki manzil noto\'g\'ri.</string>
+    <string name="detail_go_home">Bosh sahifaga</string>
+    <string name="detail_suggestions">Buning o\'rniga</string>
+
+    <string name="detail_author">Muallif</string>
+    <string name="detail_meta_ingredients_label">Masalliq</string>
+    <string name="detail_meta_steps_label">Qadam</string>
+    <string name="detail_meta_category_label">Kategoriya</string>
+    <string name="timer_title">%1$d-qadam taymeri</string>
+    <string name="timer_start">Boshlash</string>
+    <string name="timer_pause">Pauza</string>
+    <string name="timer_resume">Davom etish</string>
+    <string name="timer_reset">Qaytadan</string>
+    <string name="timer_done">Tayyor!</string>
+    <string name="shopping_selected">%1$d ta tanlandi</string>
+    <string name="shopping_select_all">Hammasini belgilash</string>
+    <string name="shopping_clear_selection">Tanlovni bekor qilish</string>
+    <string name="shopping_confirm">%1$d ta masalliqni qo\'shish</string>
+    <string name="cd_close">Yopish</string>
+
+    <string name="detail_add_to_list_short">Ro\'yxatga</string>
+    <string name="detail_ingredients_hint">Uyda borlarini belgilang — qolganini ro\'yxatga qo\'shamiz</string>
+    <string name="detail_start_cooking">Tayyorlashni boshlash</string>
+    <string name="detail_steps_count">%1$d ta qadam</string>
+    <string name="detail_timers_summary">%1$d tasida taymer · jami %2$d daqiqa</string>
+    <string name="cooking_step_label">Qadam %1$d</string>
+    <string name="cooking_progress">%1$d / %2$d</string>
+    <string name="cooking_next">Keyingi</string>
+    <string name="cooking_skip">O\'tkazib yuborish</string>
+    <string name="cooking_finish">Tugatish</string>
+    <string name="cooking_done_title">Yoqimli ishtaha!</string>
+    <string name="cooking_done_body">%1$d ta qadamdan %2$d tasi bajarildi</string>
+    <string name="cooking_back_to_recipe">Retseptga qaytish</string>
+    <string name="cd_active_timer">Ishlayotgan taymerga o\'tish</string>
+
+    <string name="saved_title">Saqlangan</string>
+    <string name="saved_tab_favorites">Sevimlilar</string>
+    <string name="saved_tab_shopping">Ro\'yxat</string>
+    <string name="saved_favorites_hint">Sevimlilar internetsiz ham ochiladi</string>
+    <string name="saved_shopping_clear">Ro\'yxatni tozalash</string>
+    <string name="saved_empty_favorites_title">Sevimlilar bo\'sh</string>
+    <string name="saved_empty_favorites_body">Yoqqan retseptni bookmark tugmasi bilan saqlang — u shu yerda turadi.</string>
+    <string name="saved_empty_shopping_title">Ro\'yxat bo\'sh</string>
+    <string name="saved_empty_shopping_body">Retseptda uyda yo\'q masalliqlarni ro\'yxatga qo\'shing — do\'konda shu yerdan belgilab borasiz.</string>
+    <string name="saved_empty_browse">Retseptlarni ko\'rish</string>
+    <string name="saved_empty_categories">Kategoriyalarga o\'tish</string>
+
+    <string name="settings_title">Sozlamalar</string>
+    <string name="settings_language">Til</string>
+    <string name="settings_appearance">Ko\'rinish</string>
+    <string name="settings_appearance_light">Yorug\'</string>
+    <string name="settings_appearance_dark">Tungi</string>
+
+    <string name="state_error_title">Nimadir noto\'g\'ri ketdi</string>
+    <string name="state_error_body">Retseptlarni yuklab bo\'lmadi. Tarmoqni tekshirib, qayta urinib ko\'ring.</string>
+    <string name="state_empty_title">Hozircha bo\'sh</string>
+    <string name="state_empty_body">Bu yerda hali retsept yo\'q.</string>
+    <string name="state_offline_title">Internet yo\'q</string>
+    <string name="state_offline_body">Saqlangan retseptlar ochiq, qolganlari tarmoq tiklanganda yuklanadi.</string>
+    <string name="state_open_cache">Saqlanganlarni ochish</string>
+    <string name="offline_banner">Internetsiz rejim</string>
+
+    <string name="paging_end">Hammasi ko\'rsatildi</string>
+    <string name="paging_error">Yuklashda xato</string>
 </resources>
