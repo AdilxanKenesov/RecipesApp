@@ -1,7 +1,7 @@
 package uz.gita.recipesapp.presenter.screens.language
 
 import org.orbitmvi.orbit.OrbitContainerHost
-import uz.gita.recipesapp.presenter.ui.state.AppLanguage
+import uz.gita.recipesapp.domain.module.AppLanguage
 
 interface LanguageContract {
     interface LanguageViewModel : OrbitContainerHost<LanguageUiState, LanguageUiState, SideEffect> {
@@ -15,8 +15,7 @@ interface LanguageContract {
     }
 
     data class LanguageUiState(
-        val selected: AppLanguage = AppLanguage.UZ,
-        val fromSettings: Boolean = false
+        val selected: AppLanguage = AppLanguage.UZ
     )
 
     sealed interface SideEffect

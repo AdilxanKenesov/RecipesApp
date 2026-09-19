@@ -3,35 +3,35 @@ package uz.gita.recipesapp.presenter.screens.recipedetail
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.orbitmvi.orbit.viewmodel.orbitContainer
+import uz.gita.recipesapp.R
+import uz.gita.recipesapp.domain.exception.NotFoundException
 import uz.gita.recipesapp.domain.module.IngredientUiData
 import uz.gita.recipesapp.domain.module.RecipeDetailUiData
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
+import uz.gita.recipesapp.domain.usecase.recipedetail.RecipeDetailUseCase
+import uz.gita.recipesapp.presenter.ui.state.AppMessenger
+import uz.gita.recipesapp.presenter.ui.util.withFavorites
+import uz.gita.recipesapp.presenter.ui.util.youTubeVideoId
 import javax.inject.Inject
 
 @HiltViewModel
 class RecipeDetailViewModel @Inject constructor(
-    private val direction: RecipeDetailContract.Direction
+    private val direction: RecipeDetailContract.Direction,
+    private val recipeDetailUseCase: RecipeDetailUseCase,
+    private val messenger: AppMessenger
 ) : ViewModel(), RecipeDetailContract.RecipeDetailViewModel {
+
+    private var recipeId: Int? = null
+    private var favoriteIds: Set<Int> = emptySet()
 
     override fun onEventDispatcher(event: RecipeDetailContract.RecipeDetailEvent) {
         when (event) {
-            is RecipeDetailContract.RecipeDetailEvent.Load -> intent {
-                val detail = SampleData.recipeDetail.takeIf { event.recipeId > 0 }
-                val related = if (detail == null) {
-                    SampleData.recipes.take(2)
-                } else {
-                    SampleData.recipes
-                        .filter { it.categoryKey == detail.categoryKey && it.id != event.recipeId }
-                        .take(6)
-                }
-                reduce {
-                    state.copy(
-                        recipe = detail,
-                        notFound = detail == null,
-                        related = related
-                    )
-                }
+            is RecipeDetailContract.RecipeDetailEvent.Load -> {
+                if (recipeId == event.recipeId) return
+                recipeId = event.recipeId
+                load(event.recipeId)
             }
+
+            RecipeDetailContract.RecipeDetailEvent.Retry -> recipeId?.let { load(it) }
 
             is RecipeDetailContract.RecipeDetailEvent.ToggleIngredient -> intent {
                 reduce {
@@ -86,29 +86,84 @@ class RecipeDetailViewModel @Inject constructor(
             }
 
             RecipeDetailContract.RecipeDetailEvent.ConfirmShopping -> intent {
-                if (state.shoppingSelection.isNullOrEmpty()) return@intent
+                val recipe = state.recipe ?: return@intent
+                val selection = state.shoppingSelection
+                if (selection.isNullOrEmpty()) return@intent
+                recipeDetailUseCase.addToShoppingList(recipe, selection)
                 reduce { state.copy(shoppingSelection = null) }
-                postSideEffect(RecipeDetailContract.SideEffect.AddedToShoppingList)
+                messenger.show(R.string.detail_added_to_shopping)
             }
 
             RecipeDetailContract.RecipeDetailEvent.ToggleFavorite -> intent {
-                reduce {
-                    val current = state.recipe
-                    state.copy(recipe = current?.copy(isFavorite = !current.isFavorite))
-                }
+                state.recipe?.let { recipeDetailUseCase.toggleFavorite(it) }
+            }
+
+            is RecipeDetailContract.RecipeDetailEvent.ToggleRelatedFavorite -> intent {
+                recipeDetailUseCase.toggleFavorite(event.recipe)
             }
 
             RecipeDetailContract.RecipeDetailEvent.Share -> intent {
-                state.recipe?.let { postSideEffect(RecipeDetailContract.SideEffect.ShareUrl(it.url)) }
+                val url = state.recipe?.url.orEmpty()
+                if (url.isNotBlank()) postSideEffect(RecipeDetailContract.SideEffect.ShareUrl(url))
             }
 
-            RecipeDetailContract.RecipeDetailEvent.OpenInBrowser -> intent {
-                state.recipe?.let { postSideEffect(RecipeDetailContract.SideEffect.OpenUrl(it.url)) }
+            RecipeDetailContract.RecipeDetailEvent.PlayVideo -> intent {
+                val videoId = state.recipe?.videoUrl?.youTubeVideoId()
+                if (videoId == null) {
+                    messenger.show(R.string.video_unavailable)
+                } else {
+                    reduce { state.copy(videoId = videoId) }
+                }
+            }
+
+            RecipeDetailContract.RecipeDetailEvent.CloseVideo -> intent {
+                reduce { state.copy(videoId = null) }
+            }
+
+            RecipeDetailContract.RecipeDetailEvent.VideoFailed -> intent {
+                reduce { state.copy(videoId = null) }
+                messenger.show(R.string.video_unavailable)
             }
 
             RecipeDetailContract.RecipeDetailEvent.OpenHome -> direction.openHome()
 
             RecipeDetailContract.RecipeDetailEvent.Back -> direction.back()
+        }
+    }
+
+    private fun load(recipeId: Int) = intent {
+        reduce { state.copy(hasError = false, notFound = false) }
+        recipeDetailUseCase.getRecipe(recipeId)
+            .onSuccess { recipe ->
+                reduce { state.copy(recipe = recipe.copy(isFavorite = recipe.id in favoriteIds)) }
+                loadRelated(recipe)
+            }
+            .onFailure { error ->
+                reduce {
+                    state.copy(
+                        notFound = error is NotFoundException,
+                        hasError = error !is NotFoundException
+                    )
+                }
+                if (error !is NotFoundException) messenger.showError(error)
+            }
+    }
+
+    private fun loadRelated(recipe: RecipeDetailUiData) = intent {
+        recipeDetailUseCase.getRelatedRecipes(recipe).onSuccess { related ->
+            reduce { state.copy(related = related.withFavorites(favoriteIds)) }
+        }
+    }
+
+    private fun observeFavorites() = intent {
+        recipeDetailUseCase.getFavoriteIds().collect { ids ->
+            favoriteIds = ids
+            reduce {
+                state.copy(
+                    recipe = state.recipe?.let { it.copy(isFavorite = it.id in ids) },
+                    related = state.related.withFavorites(ids)
+                )
+            }
         }
     }
 
@@ -131,4 +186,8 @@ class RecipeDetailViewModel @Inject constructor(
         orbitContainer<RecipeDetailContract.RecipeDetailUiState, RecipeDetailContract.SideEffect>(
             RecipeDetailContract.RecipeDetailUiState()
         )
+
+    init {
+        observeFavorites()
+    }
 }

@@ -27,6 +27,10 @@ object AppNavigationDispatcher : AppNavigator, AppNavigationHandler {
         this.replaceAll(screen)
     }
 
+    override fun replaceAll(screens: List<Screen>) = navigate {
+        this.replaceAll(screens)
+    }
+
     override fun back() = navigate {
         if (canPop) pop()
     }

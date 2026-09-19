@@ -3,24 +3,24 @@ package uz.gita.recipesapp.presenter.screens.language
 import androidx.lifecycle.ViewModel
 import dagger.hilt.android.lifecycle.HiltViewModel
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import uz.gita.recipesapp.presenter.ui.state.AppSettingsStore
+import uz.gita.recipesapp.domain.usecase.language.LanguageUseCase
 import javax.inject.Inject
 
 @HiltViewModel
 class LanguageViewModel @Inject constructor(
     private val direction: LanguageContract.Direction,
-    private val settings: AppSettingsStore
+    private val languageUseCase: LanguageUseCase
 ) : ViewModel(), LanguageContract.LanguageViewModel {
 
     override fun onEventDispatcher(event: LanguageContract.LanguageEvent) {
         when (event) {
             is LanguageContract.LanguageEvent.Select -> intent {
-                settings.setLanguage(event.language)
+                languageUseCase.setLanguage(event.language)
                 reduce { state.copy(selected = event.language) }
             }
 
             LanguageContract.LanguageEvent.Confirm -> {
-                settings.setIntroShown(true)
+                languageUseCase.completeOnboarding()
                 direction.openHome()
             }
 
@@ -29,6 +29,6 @@ class LanguageViewModel @Inject constructor(
     }
 
     override val container = orbitContainer<LanguageContract.LanguageUiState, LanguageContract.SideEffect>(
-        LanguageContract.LanguageUiState(selected = settings.language.value)
+        LanguageContract.LanguageUiState(selected = languageUseCase.getLanguage())
     )
 }

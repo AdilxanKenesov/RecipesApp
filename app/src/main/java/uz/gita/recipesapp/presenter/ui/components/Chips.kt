@@ -39,28 +39,6 @@ import uz.gita.recipesapp.presenter.ui.theme.oshxona
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 
 @Composable
-fun MetaChip(
-    text: String,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.oshxona
-    Row(
-        modifier = modifier
-            .clip(Shapes.pill)
-            .background(colors.surface)
-            .border(BorderStroke(1.dp, colors.hairline), Shapes.pill)
-            .padding(horizontal = Spacing.sm, vertical = Spacing.xxs),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = text,
-            style = BadgeLabel,
-            color = colors.inkMuted
-        )
-    }
-}
-
-@Composable
 fun CategoryChip(
     emoji: String,
     name: String,

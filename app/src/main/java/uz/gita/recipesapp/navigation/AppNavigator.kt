@@ -10,6 +10,8 @@ interface AppNavigator {
 
     fun replaceAll(screen: Screen)
 
+    fun replaceAll(screens: List<Screen>)
+
     fun back()
 
     fun backTo(predicate: (Screen) -> Boolean)

@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.rounded.Settings
@@ -19,6 +21,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,25 +30,23 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.hilt.getViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
-import uz.gita.recipesapp.domain.module.CategoryUiData
 import uz.gita.recipesapp.presenter.ui.components.CategoryCard
 import uz.gita.recipesapp.presenter.ui.components.ErrorStateView
 import uz.gita.recipesapp.presenter.ui.components.HeroCard
-import uz.gita.recipesapp.presenter.ui.components.OfflineBanner
+import uz.gita.recipesapp.presenter.ui.components.HomeSkeleton
 import uz.gita.recipesapp.presenter.ui.components.OshxonaIconButton
 import uz.gita.recipesapp.presenter.ui.components.OshxonaScaffold
 import uz.gita.recipesapp.presenter.ui.components.RecipeListCard
-import uz.gita.recipesapp.presenter.ui.components.RecipeListCardSkeleton
 import uz.gita.recipesapp.presenter.ui.components.ScreenTopBar
 import uz.gita.recipesapp.presenter.ui.components.SecondaryButton
 import uz.gita.recipesapp.presenter.ui.components.SectionHeader
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_CATEGORY
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_RECIPE
+import uz.gita.recipesapp.presenter.ui.util.RetryWhenOnline
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 
 class HomeScreen : Screen {
@@ -55,6 +56,10 @@ class HomeScreen : Screen {
         val viewModel: HomeContract.HomeViewModel = getViewModel<HomeViewModel>()
         val state by viewModel.collectAsState()
 
+        RetryWhenOnline(hasError = state.hasError) {
+            viewModel.onEventDispatcher(HomeContract.HomeEvent.Retry)
+        }
+
         HomeContent(state, viewModel::onEventDispatcher)
     }
 
@@ -63,6 +68,10 @@ class HomeScreen : Screen {
         state: HomeContract.HomeUiState,
         onEventDispatcher: (HomeContract.HomeEvent) -> Unit
     ) {
+        val categoryRows = remember(state.categories) {
+            state.categories.filter { it.count > 0 }.take(4).chunked(2)
+        }
+
         OshxonaScaffold(
             topBar = {
                 ScreenTopBar(
@@ -82,14 +91,12 @@ class HomeScreen : Screen {
                     onRetry = { onEventDispatcher(HomeContract.HomeEvent.Retry) }
                 )
 
-                state.isLoading -> Column(
+                state.isLoading -> HomeSkeleton(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(horizontal = Spacing.md),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    repeat(4) { RecipeListCardSkeleton() }
-                }
+                        .verticalScroll(rememberScrollState(), enabled = false)
+                        .padding(horizontal = Spacing.md)
+                )
 
                 else -> LazyColumn(
                     modifier = Modifier.fillMaxSize(),
@@ -99,15 +106,6 @@ class HomeScreen : Screen {
                         bottom = Spacing.xxl
                     )
                 ) {
-                    if (state.isOffline) {
-                        item {
-                            OfflineBanner(
-                                onRetry = { onEventDispatcher(HomeContract.HomeEvent.Retry) },
-                                modifier = Modifier.padding(bottom = Spacing.sm)
-                            )
-                        }
-                    }
-
                     item {
                         state.hero?.let { hero ->
                             HeroCard(
@@ -115,7 +113,7 @@ class HomeScreen : Screen {
                                 overline = stringResource(R.string.home_hero_overline),
                                 onClick = { onEventDispatcher(HomeContract.HomeEvent.OpenRecipe(hero.id)) },
                                 onBookmarkClick = {
-                                    onEventDispatcher(HomeContract.HomeEvent.ToggleFavorite(hero.id))
+                                    onEventDispatcher(HomeContract.HomeEvent.ToggleFavorite(hero))
                                 }
                             )
                             Spacer(Modifier.size(Spacing.sm))
@@ -139,8 +137,9 @@ class HomeScreen : Screen {
                     }
 
                     items(
-                        items = state.categories.filter { it.count > 0 }.take(4).chunked(2),
-                        key = { row -> row.first().key }
+                        items = categoryRows,
+                        key = { row -> row.first().key },
+                        contentType = { CONTENT_CATEGORY }
                     ) { row ->
                         Row(
                             modifier = Modifier
@@ -151,7 +150,6 @@ class HomeScreen : Screen {
                             row.forEach { category ->
                                 CategoryCard(
                                     category = category,
-                                    countLabel = stringResource(R.string.categories_count, category.count),
                                     onClick = { onEventDispatcher(HomeContract.HomeEvent.OpenCategory(category)) },
                                     modifier = Modifier.weight(1f)
                                 )
@@ -176,12 +174,12 @@ class HomeScreen : Screen {
                         Spacer(Modifier.size(Spacing.sm))
                     }
 
-                    items(items = state.recipes, key = { it.id }) { recipe ->
+                    items(items = state.recipes, key = { it.id }, contentType = { CONTENT_RECIPE }) { recipe ->
                         RecipeListCard(
                             recipe = recipe,
                             onClick = { onEventDispatcher(HomeContract.HomeEvent.OpenRecipe(recipe.id)) },
                             onBookmarkClick = {
-                                onEventDispatcher(HomeContract.HomeEvent.ToggleFavorite(recipe.id))
+                                onEventDispatcher(HomeContract.HomeEvent.ToggleFavorite(recipe))
                             },
                             modifier = Modifier.padding(bottom = Spacing.sm)
                         )
@@ -190,7 +188,7 @@ class HomeScreen : Screen {
                     item {
                         Spacer(Modifier.size(Spacing.xs))
                         SecondaryButton(
-                            text = stringResource(R.string.home_all_recipes, state.totalCount),
+                            text = stringResource(R.string.home_all_recipes),
                             onClick = { onEventDispatcher(HomeContract.HomeEvent.OpenAllRecipes) }
                         )
                     }
@@ -236,22 +234,6 @@ class HomeScreen : Screen {
                     modifier = Modifier.size(Sizes.iconSm)
                 )
             }
-        }
-    }
-
-    @ThemePreview
-    @Composable
-    private fun HomePreview() {
-        OshxonaTheme {
-            HomeContent(
-                state = HomeContract.HomeUiState(
-                    hero = SampleData.recipes.first(),
-                    categories = SampleData.categories,
-                    recipes = SampleData.recipes.take(3),
-                    totalCount = SampleData.totalRecipeCount
-                ),
-                onEventDispatcher = { }
-            )
         }
     }
 }

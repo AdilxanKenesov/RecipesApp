@@ -23,7 +23,7 @@ interface SearchContract {
         data class QuickIngredientClicked(val name: String) : SearchEvent
         data class OpenCategory(val category: CategoryUiData) : SearchEvent
         data class OpenRecipe(val recipeId: Int) : SearchEvent
-        data class ToggleFavorite(val recipeId: Int) : SearchEvent
+        data class ToggleFavorite(val recipe: RecipeUiData) : SearchEvent
         data object AddIngredient : SearchEvent
         data object FindByIngredients : SearchEvent
         data object ClearRecent : SearchEvent
@@ -42,7 +42,6 @@ interface SearchContract {
         val searchedIngredients: List<String>? = null,
         val hasError: Boolean = false,
         val recent: List<String> = emptyList(),
-        val quickIngredients: List<String> = emptyList(),
         val categories: List<CategoryUiData> = emptyList()
     ) {
         val nameLimitReached: Boolean get() = (nameResults?.size ?: 0) >= 40

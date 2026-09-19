@@ -19,9 +19,9 @@ interface SavedContract {
         data class OpenRecipe(val recipeId: Int) : SavedEvent
         data class ToggleFavorite(val recipeId: Int) : SavedEvent
         data class ToggleShoppingItem(val itemId: Int) : SavedEvent
+        data class StartCooking(val recipeId: Int) : SavedEvent
         data object ClearShopping : SavedEvent
         data object OpenCategories : SavedEvent
-        data object OpenAllRecipes : SavedEvent
     }
 
     data class SavedUiState(
@@ -35,6 +35,6 @@ interface SavedContract {
     interface Direction {
         fun openRecipe(recipeId: Int)
         fun openCategories()
-        fun openAllRecipes()
+        fun openCooking(recipeId: Int)
     }
 }

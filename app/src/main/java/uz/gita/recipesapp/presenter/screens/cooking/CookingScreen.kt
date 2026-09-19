@@ -36,6 +36,7 @@ import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.Replay
 import androidx.compose.material.icons.rounded.Timer
+import androidx.compose.material.icons.rounded.ZoomIn
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -44,12 +45,15 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
@@ -71,16 +75,14 @@ import uz.gita.recipesapp.presenter.ui.components.OshxonaIconButton
 import uz.gita.recipesapp.presenter.ui.components.PrimaryButton
 import uz.gita.recipesapp.presenter.ui.components.RecipeImage
 import uz.gita.recipesapp.presenter.ui.components.SecondaryButton
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
+import uz.gita.recipesapp.presenter.ui.components.ZoomableImageViewer
+import uz.gita.recipesapp.presenter.ui.theme.Overlay
 import uz.gita.recipesapp.presenter.ui.theme.Overline
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.cardShadow
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
-import uz.gita.recipesapp.presenter.ui.util.cleanRecipeTitle
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 import java.util.Locale
 
@@ -312,6 +314,16 @@ class CookingScreen(
         onEventDispatcher: (CookingContract.CookingEvent) -> Unit
     ) {
         val colors = MaterialTheme.oshxona
+        var viewerIndex by remember(step.number) { mutableStateOf<Int?>(null) }
+
+        viewerIndex?.let { index ->
+            ZoomableImageViewer(
+                images = step.images,
+                initialIndex = index,
+                onDismiss = { viewerIndex = null }
+            )
+        }
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -320,14 +332,35 @@ class CookingScreen(
                 .padding(top = Spacing.md, bottom = Spacing.lg)
         ) {
             step.images.firstOrNull()?.let { image ->
-                RecipeImage(
-                    url = image,
-                    toneSeed = step.number,
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(4f / 3f)
                         .clip(Shapes.hero)
-                )
+                        .scaleClickable(onClickLabel = stringResource(R.string.cd_zoom_image)) { viewerIndex = 0 }
+                ) {
+                    RecipeImage(
+                        url = image,
+                        toneSeed = step.number,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(Spacing.sm)
+                            .size(Sizes.iconButton - Spacing.xs)
+                            .clip(Shapes.pill)
+                            .background(Overlay.copy(alpha = 0.45f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.ZoomIn,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(Sizes.iconSm)
+                        )
+                    }
+                }
                 Spacer(Modifier.size(Spacing.lg))
             }
             Text(
@@ -523,22 +556,4 @@ class CookingScreen(
 
     private fun formatTime(seconds: Int): String =
         String.format(Locale.ROOT, "%02d:%02d", seconds / 60, seconds % 60)
-
-    @ThemePreview
-    @Composable
-    private fun CookingPreview() {
-        OshxonaTheme {
-            val recipe = SampleData.recipeDetail
-            CookingContent(
-                state = CookingContract.CookingUiState(
-                    title = recipe.title.cleanRecipeTitle(),
-                    steps = recipe.steps,
-                    currentIndex = 0,
-                    statuses = emptyMap()
-                ),
-                pagerState = rememberPagerState { recipe.steps.size },
-                onEventDispatcher = { }
-            )
-        }
-    }
 }

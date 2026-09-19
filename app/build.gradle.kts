@@ -25,13 +25,19 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "BASE_URL", "\"https://oshxona-api.zokirov-mob-dev.uz/\"")
     }
 
     buildTypes {
         release {
             optimization {
-                enable = false
+                enable = true
+                keepRules {
+                    files.add(file("proguard-rules.pro"))
+                }
             }
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
     compileOptions {
@@ -40,6 +46,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -102,6 +109,10 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.haze)
+    implementation(libs.paging.runtime)
+    implementation(libs.paging.compose)
+    implementation(libs.youtube.player)
+    implementation(libs.telephoto.zoomable.image.coil3)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

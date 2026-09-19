@@ -7,32 +7,23 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import uz.gita.recipesapp.domain.module.RecipeUiData
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
+import uz.gita.recipesapp.domain.usecase.search.SearchUseCase
+import uz.gita.recipesapp.presenter.ui.state.AppMessenger
 import uz.gita.recipesapp.presenter.ui.state.TabSwitcher
 import uz.gita.recipesapp.presenter.ui.util.normalizeQuery
+import uz.gita.recipesapp.presenter.ui.util.withFavorites
 import javax.inject.Inject
 
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val direction: SearchContract.Direction,
-    private val tabSwitcher: TabSwitcher
+    private val tabSwitcher: TabSwitcher,
+    private val searchUseCase: SearchUseCase,
+    private val messenger: AppMessenger
 ) : ViewModel(), SearchContract.SearchViewModel {
 
     private var searchJob: Job? = null
-
-    init {
-        viewModelScope.launch {
-            tabSwitcher.pendingIngredientSearch.collect { pending ->
-                if (pending) {
-                    intent {
-                        reduce { state.copy(mode = SearchContract.SearchMode.BY_INGREDIENT) }
-                    }
-                    tabSwitcher.consumeIngredientSearch()
-                }
-            }
-        }
-    }
+    private var favoriteIds: Set<Int> = emptySet()
 
     override fun onEventDispatcher(event: SearchContract.SearchEvent) {
         when (event) {
@@ -73,15 +64,7 @@ class SearchViewModel @Inject constructor(
             is SearchContract.SearchEvent.OpenRecipe -> direction.openRecipe(event.recipeId)
 
             is SearchContract.SearchEvent.ToggleFavorite -> intent {
-                val toggle: (RecipeUiData) -> RecipeUiData = {
-                    if (it.id == event.recipeId) it.copy(isFavorite = !it.isFavorite) else it
-                }
-                reduce {
-                    state.copy(
-                        nameResults = state.nameResults?.map(toggle),
-                        ingredientResults = state.ingredientResults?.map(toggle)
-                    )
-                }
+                searchUseCase.toggleFavorite(event.recipe)
             }
 
             SearchContract.SearchEvent.AddIngredient -> intent {
@@ -103,24 +86,23 @@ class SearchViewModel @Inject constructor(
                     state.ingredients
                 }
                 if (ingredients.isEmpty()) return@intent
-                reduce { state.copy(ingredients = ingredients, ingredientInput = "", isIngredientLoading = true) }
-                delay(400)
-                val found = searchByIngredients(ingredients)
-                reduce {
-                    state.copy(
-                        isIngredientLoading = false,
-                        ingredientResults = found,
-                        searchedIngredients = ingredients
-                    )
-                }
+                reduce { state.copy(ingredients = ingredients, ingredientInput = "") }
+                findByIngredients(ingredients)
             }
 
             SearchContract.SearchEvent.ClearRecent -> intent {
-                reduce { state.copy(recent = emptyList()) }
+                searchUseCase.clearRecentSearches()
             }
 
             SearchContract.SearchEvent.Retry -> intent {
-                reduce { state.copy(hasError = false, isNameLoading = false, isIngredientLoading = false) }
+                reduce { state.copy(hasError = false) }
+                when (state.mode) {
+                    SearchContract.SearchMode.BY_NAME -> scheduleSearch(state.query, immediate = true)
+                    SearchContract.SearchMode.BY_INGREDIENT -> {
+                        val ingredients = state.searchedIngredients ?: state.ingredients
+                        if (ingredients.isNotEmpty()) findByIngredients(ingredients)
+                    }
+                }
             }
         }
     }
@@ -128,36 +110,98 @@ class SearchViewModel @Inject constructor(
     private fun scheduleSearch(query: String, immediate: Boolean = false) {
         searchJob?.cancel()
         val normalized = query.normalizeQuery()
-        if (normalized.length < 2) {
+        if (normalized.length < MIN_QUERY_LENGTH) {
             intent { reduce { state.copy(nameResults = null, isNameLoading = false) } }
             return
         }
         searchJob = intent {
-            reduce { state.copy(isNameLoading = true) }
-            if (!immediate) delay(400)
-            val found = searchByName(normalized)
+            reduce { state.copy(isNameLoading = true, hasError = false) }
+            if (!immediate) delay(SEARCH_DEBOUNCE_MILLIS)
+            searchUseCase.searchByName(normalized)
+                .onSuccess { found ->
+                    reduce { state.copy(isNameLoading = false, nameResults = found.withFavorites(favoriteIds)) }
+                }
+                .onFailure { error ->
+                    reduce { state.copy(isNameLoading = false, hasError = true) }
+                    messenger.showError(error)
+                }
+        }
+    }
+
+    private fun findByIngredients(ingredients: List<String>) = intent {
+        reduce { state.copy(isIngredientLoading = true, hasError = false) }
+        searchUseCase.searchByIngredients(ingredients)
+            .onSuccess { found ->
+                reduce {
+                    state.copy(
+                        isIngredientLoading = false,
+                        ingredientResults = found.withFavorites(favoriteIds),
+                        searchedIngredients = ingredients
+                    )
+                }
+            }
+            .onFailure { error ->
+                reduce { state.copy(isIngredientLoading = false, hasError = true) }
+                messenger.showError(error)
+            }
+    }
+
+    private fun loadCategories() = intent {
+        searchUseCase.getCategories().onSuccess { categories ->
+            reduce { state.copy(categories = categories) }
+        }
+    }
+
+    private fun observeRecentSearches() = intent {
+        searchUseCase.getRecentSearches().collect { recent ->
+            reduce { state.copy(recent = recent) }
+        }
+    }
+
+    private fun observeFavorites() = intent {
+        searchUseCase.getFavoriteIds().collect { ids ->
+            favoriteIds = ids
             reduce {
                 state.copy(
-                    isNameLoading = false,
-                    nameResults = found,
-                    recent = (listOf(query) + state.recent).distinct().take(6)
+                    nameResults = state.nameResults?.withFavorites(ids),
+                    ingredientResults = state.ingredientResults?.withFavorites(ids)
                 )
             }
         }
     }
 
-    private fun searchByName(query: String): List<RecipeUiData> =
-        SampleData.recipes.filter { it.title.contains(query, ignoreCase = true) }
+    private fun initialMode(): SearchContract.SearchMode {
+        if (!tabSwitcher.pendingIngredientSearch.value) return SearchContract.SearchMode.BY_NAME
+        tabSwitcher.consumeIngredientSearch()
+        return SearchContract.SearchMode.BY_INGREDIENT
+    }
 
-    private fun searchByIngredients(ingredients: List<String>): List<RecipeUiData> =
-        if (ingredients.isEmpty()) emptyList()
-        else SampleData.recipes.filterIndexed { index, _ -> index % 2 == 0 }
+    private fun observeTabSwitcher() {
+        viewModelScope.launch {
+            tabSwitcher.pendingIngredientSearch.collect { pending ->
+                if (pending) {
+                    intent {
+                        reduce { state.copy(mode = SearchContract.SearchMode.BY_INGREDIENT) }
+                    }
+                    tabSwitcher.consumeIngredientSearch()
+                }
+            }
+        }
+    }
 
     override val container = orbitContainer<SearchContract.SearchUiState, SearchContract.SideEffect>(
-        SearchContract.SearchUiState(
-            recent = SampleData.recentSearches,
-            quickIngredients = SampleData.quickIngredients,
-            categories = SampleData.categories.filter { it.count > 0 }
-        )
+        SearchContract.SearchUiState(mode = initialMode())
     )
+
+    init {
+        observeTabSwitcher()
+        observeRecentSearches()
+        observeFavorites()
+        loadCategories()
+    }
+
+    companion object {
+        private const val MIN_QUERY_LENGTH = 2
+        private const val SEARCH_DEBOUNCE_MILLIS = 400L
+    }
 }

@@ -28,11 +28,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.tab.CurrentTab
-import cafe.adriel.voyager.navigator.tab.LocalTabNavigator
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabNavigator
 import dagger.hilt.android.EntryPointAccessors
-import uz.gita.recipesapp.presenter.ui.state.TabSwitcher
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona

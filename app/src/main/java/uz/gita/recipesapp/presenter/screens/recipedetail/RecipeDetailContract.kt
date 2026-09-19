@@ -16,29 +16,32 @@ interface RecipeDetailContract {
         data class OpenRecipe(val recipeId: Int) : RecipeDetailEvent
         data class ToggleShoppingItem(val ingredientId: Int) : RecipeDetailEvent
         data object ToggleFavorite : RecipeDetailEvent
+        data class ToggleRelatedFavorite(val recipe: RecipeUiData) : RecipeDetailEvent
         data object StartCooking : RecipeDetailEvent
         data object Share : RecipeDetailEvent
-        data object OpenInBrowser : RecipeDetailEvent
+        data object PlayVideo : RecipeDetailEvent
+        data object VideoFailed : RecipeDetailEvent
+        data object CloseVideo : RecipeDetailEvent
         data object OpenShoppingSheet : RecipeDetailEvent
         data object CloseShoppingSheet : RecipeDetailEvent
         data object ToggleAllShopping : RecipeDetailEvent
         data object ConfirmShopping : RecipeDetailEvent
         data object OpenHome : RecipeDetailEvent
+        data object Retry : RecipeDetailEvent
         data object Back : RecipeDetailEvent
     }
 
     data class RecipeDetailUiState(
-        val isLoading: Boolean = false,
+        val hasError: Boolean = false,
         val notFound: Boolean = false,
         val recipe: RecipeDetailUiData? = null,
         val related: List<RecipeUiData> = emptyList(),
-        val shoppingSelection: Set<Int>? = null
+        val shoppingSelection: Set<Int>? = null,
+        val videoId: String? = null
     )
 
     sealed interface SideEffect {
-        data class OpenUrl(val url: String) : SideEffect
         data class ShareUrl(val url: String) : SideEffect
-        data object AddedToShoppingList : SideEffect
     }
 
     interface Direction {

@@ -17,18 +17,16 @@ interface HomeContract {
         data object OpenIngredientSearch : HomeEvent
         data object Retry : HomeEvent
         data class OpenRecipe(val recipeId: Int) : HomeEvent
-        data class ToggleFavorite(val recipeId: Int) : HomeEvent
+        data class ToggleFavorite(val recipe: RecipeUiData) : HomeEvent
         data class OpenCategory(val category: CategoryUiData) : HomeEvent
     }
 
     data class HomeUiState(
         val isLoading: Boolean = false,
         val hasError: Boolean = false,
-        val isOffline: Boolean = false,
         val hero: RecipeUiData? = null,
         val categories: List<CategoryUiData> = emptyList(),
-        val recipes: List<RecipeUiData> = emptyList(),
-        val totalCount: Int = 0
+        val recipes: List<RecipeUiData> = emptyList()
     )
 
     sealed interface SideEffect

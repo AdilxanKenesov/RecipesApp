@@ -1,16 +1,20 @@
 package uz.gita.recipesapp.presenter.ui.util
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
+import kotlinx.coroutines.flow.collectLatest
+
+private const val PRESSED_SCALE = 0.98f
+private const val SCALE_DURATION_MILLIS = 120
 
 @Composable
 fun Modifier.scaleClickable(
@@ -20,14 +24,20 @@ fun Modifier.scaleClickable(
     onClick: () -> Unit,
 ): Modifier {
     val interactionSource = remember { MutableInteractionSource() }
-    val pressed by interactionSource.collectIsPressedAsState()
-    val scale by animateFloatAsState(
-        targetValue = if (pressed && enabled) 0.98f else 1f,
-        animationSpec = tween(durationMillis = 120),
-        label = "scaleClickable"
-    )
+    val scale = remember { Animatable(1f) }
+
+    LaunchedEffect(interactionSource, enabled) {
+        interactionSource.interactions.collectLatest { interaction ->
+            val target = if (interaction is PressInteraction.Press && enabled) PRESSED_SCALE else 1f
+            scale.animateTo(target, tween(durationMillis = SCALE_DURATION_MILLIS))
+        }
+    }
+
     return this
-        .scale(scale)
+        .graphicsLayer {
+            scaleX = scale.value
+            scaleY = scale.value
+        }
         .clickable(
             interactionSource = interactionSource,
             indication = null,

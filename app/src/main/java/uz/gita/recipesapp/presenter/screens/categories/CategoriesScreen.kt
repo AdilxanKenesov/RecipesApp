@@ -22,14 +22,15 @@ import cafe.adriel.voyager.hilt.getViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
 import uz.gita.recipesapp.presenter.ui.components.CategoryCard
+import uz.gita.recipesapp.presenter.ui.components.CategoryCardSkeleton
 import uz.gita.recipesapp.presenter.ui.components.ErrorStateView
 import uz.gita.recipesapp.presenter.ui.components.OshxonaScaffold
 import uz.gita.recipesapp.presenter.ui.components.ScreenTopBar
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
+import uz.gita.recipesapp.presenter.ui.components.rememberShimmer
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_CATEGORY
+import uz.gita.recipesapp.presenter.ui.util.RetryWhenOnline
 
 class CategoriesScreen : Screen {
 
@@ -37,6 +38,10 @@ class CategoriesScreen : Screen {
     override fun Content() {
         val viewModel: CategoriesContract.CategoriesViewModel = getViewModel<CategoriesViewModel>()
         val state by viewModel.collectAsState()
+
+        RetryWhenOnline(hasError = state.hasError) {
+            viewModel.onEventDispatcher(CategoriesContract.CategoriesEvent.Retry)
+        }
 
         CategoriesContent(state, viewModel::onEventDispatcher)
     }
@@ -53,6 +58,18 @@ class CategoriesScreen : Screen {
         ) {
             if (state.hasError) {
                 ErrorStateView(onRetry = { onEventDispatcher(CategoriesContract.CategoriesEvent.Retry) })
+            } else if (state.isLoading) {
+                val shimmer = rememberShimmer()
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = Spacing.md),
+                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                    userScrollEnabled = false
+                ) {
+                    items(count = 10) { CategoryCardSkeleton(shimmer = shimmer) }
+                }
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),
@@ -65,10 +82,9 @@ class CategoriesScreen : Screen {
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    items(items = state.available, key = { it.key }) { category ->
+                    items(items = state.available, key = { it.key }, contentType = { CONTENT_CATEGORY }) { category ->
                         CategoryCard(
                             category = category,
-                            countLabel = stringResource(R.string.categories_count, category.count),
                             onClick = {
                                 onEventDispatcher(CategoriesContract.CategoriesEvent.OpenCategory(category))
                             }
@@ -88,10 +104,9 @@ class CategoriesScreen : Screen {
                             }
                         }
 
-                        items(items = state.empty, key = { it.key }) { category ->
+                        items(items = state.empty, key = { it.key }, contentType = { CONTENT_CATEGORY }) { category ->
                             CategoryCard(
                                 category = category,
-                                countLabel = stringResource(R.string.categories_count, category.count),
                                 onClick = { },
                                 enabled = false
                             )
@@ -99,17 +114,6 @@ class CategoriesScreen : Screen {
                     }
                 }
             }
-        }
-    }
-
-    @ThemePreview
-    @Composable
-    private fun CategoriesPreview() {
-        OshxonaTheme {
-            CategoriesContent(
-                state = CategoriesContract.CategoriesUiState(categories = SampleData.categories),
-                onEventDispatcher = { }
-            )
         }
     }
 }

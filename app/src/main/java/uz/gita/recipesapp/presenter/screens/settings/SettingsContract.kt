@@ -1,8 +1,8 @@
 package uz.gita.recipesapp.presenter.screens.settings
 
 import org.orbitmvi.orbit.OrbitContainerHost
-import uz.gita.recipesapp.presenter.ui.state.AppLanguage
-import uz.gita.recipesapp.presenter.ui.state.ThemeMode
+import uz.gita.recipesapp.domain.module.AppLanguage
+import uz.gita.recipesapp.domain.module.ThemeMode
 
 interface SettingsContract {
     interface SettingsViewModel : OrbitContainerHost<SettingsUiState, SettingsUiState, SideEffect> {
@@ -24,5 +24,6 @@ interface SettingsContract {
 
     interface Direction {
         fun back()
+        fun reloadWithLanguage()
     }
 }

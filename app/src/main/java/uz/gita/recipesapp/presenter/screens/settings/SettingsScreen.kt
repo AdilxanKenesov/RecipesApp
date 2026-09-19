@@ -2,6 +2,7 @@ package uz.gita.recipesapp.presenter.screens.settings
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,9 +11,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.DarkMode
+import androidx.compose.material.icons.rounded.LightMode
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -22,16 +26,18 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.hilt.getViewModel
 import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
+import uz.gita.recipesapp.domain.module.AppLanguage
+import uz.gita.recipesapp.domain.module.ThemeMode
 import uz.gita.recipesapp.presenter.ui.components.OshxonaScaffold
 import uz.gita.recipesapp.presenter.ui.components.ScreenTopBar
 import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.state.AppLanguage
-import uz.gita.recipesapp.presenter.ui.state.ThemeMode
 import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
@@ -74,6 +80,7 @@ class SettingsScreen : Screen {
                 SettingsGroup(title = stringResource(R.string.settings_language)) {
                     SettingsOption(
                         label = stringResource(R.string.language_uz),
+                        leading = { FlagIcon(FLAG_UZ) },
                         selected = state.language == AppLanguage.UZ,
                         onClick = {
                             onEventDispatcher(
@@ -84,6 +91,7 @@ class SettingsScreen : Screen {
                     HorizontalDivider(color = colors.hairlineSoft)
                     SettingsOption(
                         label = stringResource(R.string.language_ru),
+                        leading = { FlagIcon(FLAG_RU) },
                         selected = state.language == AppLanguage.RU,
                         onClick = {
                             onEventDispatcher(
@@ -105,6 +113,14 @@ class SettingsScreen : Screen {
                                     ThemeMode.DARK -> R.string.settings_appearance_dark
                                 }
                             ),
+                            leading = {
+                                ThemeIcon(
+                                    when (mode) {
+                                        ThemeMode.LIGHT -> Icons.Rounded.LightMode
+                                        ThemeMode.DARK -> Icons.Rounded.DarkMode
+                                    }
+                                )
+                            },
                             selected = state.themeMode == mode,
                             onClick = {
                                 onEventDispatcher(SettingsContract.SettingsEvent.ThemeChanged(mode))
@@ -144,6 +160,7 @@ class SettingsScreen : Screen {
     @Composable
     private fun SettingsOption(
         label: String,
+        leading: @Composable () -> Unit,
         selected: Boolean,
         onClick: () -> Unit
     ) {
@@ -156,11 +173,17 @@ class SettingsScreen : Screen {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyMedium,
-                color = if (selected) colors.primaryInk else colors.ink
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Spacing.sm)
+            ) {
+                leading()
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (selected) colors.primaryInk else colors.ink
+                )
+            }
             if (selected) {
                 Icon(
                     imageVector = Icons.Rounded.Check,
@@ -169,6 +192,38 @@ class SettingsScreen : Screen {
                     modifier = Modifier.size(Sizes.iconSm)
                 )
             }
+        }
+    }
+
+    @Composable
+    private fun OptionIconBox(content: @Composable () -> Unit) {
+        Box(
+            modifier = Modifier
+                .size(OPTION_ICON_SIZE)
+                .clip(CircleShape)
+                .background(MaterialTheme.oshxona.primaryTint),
+            contentAlignment = Alignment.Center
+        ) {
+            content()
+        }
+    }
+
+    @Composable
+    private fun FlagIcon(flag: String) {
+        OptionIconBox {
+            Text(text = flag, style = MaterialTheme.typography.titleMedium)
+        }
+    }
+
+    @Composable
+    private fun ThemeIcon(icon: ImageVector) {
+        OptionIconBox {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.oshxona.primaryInk,
+                modifier = Modifier.size(Sizes.iconSm)
+            )
         }
     }
 
@@ -181,5 +236,11 @@ class SettingsScreen : Screen {
                 onEventDispatcher = { }
             )
         }
+    }
+
+    private companion object {
+        const val FLAG_UZ = "\uD83C\uDDFA\uD83C\uDDFF"
+        const val FLAG_RU = "\uD83C\uDDF7\uD83C\uDDFA"
+        val OPTION_ICON_SIZE = 36.dp
     }
 }

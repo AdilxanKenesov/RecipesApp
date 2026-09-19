@@ -1,8 +1,8 @@
 package uz.gita.recipesapp.presenter.screens.recipedetail
 
 import android.content.Intent
-import android.net.Uri
-import android.widget.Toast
+import android.view.View
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +11,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,18 +20,19 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.ArrowForward
+import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.PlayArrow
 import androidx.compose.material.icons.rounded.PlaylistAdd
-import androidx.compose.material.icons.rounded.Restaurant
 import androidx.compose.material.icons.rounded.Share
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +44,9 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,30 +70,33 @@ import uz.gita.recipesapp.R
 import uz.gita.recipesapp.domain.module.IngredientUiData
 import uz.gita.recipesapp.domain.module.RecipeDetailUiData
 import uz.gita.recipesapp.presenter.ui.components.BookmarkButton
+import uz.gita.recipesapp.presenter.ui.components.ErrorStateView
+import uz.gita.recipesapp.presenter.ui.components.FullscreenVideoContainer
 import uz.gita.recipesapp.presenter.ui.components.GlassBottomSheet
 import uz.gita.recipesapp.presenter.ui.components.IngredientGroupHeader
 import uz.gita.recipesapp.presenter.ui.components.IngredientRow
 import uz.gita.recipesapp.presenter.ui.components.NotFoundStateView
 import uz.gita.recipesapp.presenter.ui.components.OshxonaIconButton
 import uz.gita.recipesapp.presenter.ui.components.PrimaryButton
+import uz.gita.recipesapp.presenter.ui.components.RecipeDetailSkeleton
 import uz.gita.recipesapp.presenter.ui.components.RecipeGridCard
 import uz.gita.recipesapp.presenter.ui.components.RecipeImage
-import uz.gita.recipesapp.presenter.ui.components.RecipeListCard
 import uz.gita.recipesapp.presenter.ui.components.SheetHandle
 import uz.gita.recipesapp.presenter.ui.components.SheetShape
+import uz.gita.recipesapp.presenter.ui.components.VideoFullscreenEffect
+import uz.gita.recipesapp.presenter.ui.components.YouTubeVideoPlayer
 import uz.gita.recipesapp.presenter.ui.components.glassOnImageStyle
 import uz.gita.recipesapp.presenter.ui.components.glassStyle
 import uz.gita.recipesapp.presenter.ui.components.glassTopEdge
 import uz.gita.recipesapp.presenter.ui.components.rememberLastNonNull
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Overlay
 import uz.gita.recipesapp.presenter.ui.theme.Overline
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_RECIPE
+import uz.gita.recipesapp.presenter.ui.util.RetryWhenOnline
 import uz.gita.recipesapp.presenter.ui.util.cleanRecipeTitle
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 
@@ -102,28 +111,25 @@ class RecipeDetailScreen(
         val viewModel: RecipeDetailContract.RecipeDetailViewModel = getViewModel<RecipeDetailViewModel>()
         val state by viewModel.collectAsState()
         val context = LocalContext.current
-        val addedMessage = stringResource(R.string.detail_added_to_shopping)
 
         viewModel.collectSideEffect { effect ->
             when (effect) {
-                is RecipeDetailContract.SideEffect.OpenUrl ->
-                    context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(effect.url)))
-
-                is RecipeDetailContract.SideEffect.ShareUrl -> {
+                is RecipeDetailContract.SideEffect.ShareUrl -> runCatching {
                     val intent = Intent(Intent.ACTION_SEND).apply {
                         type = "text/plain"
                         putExtra(Intent.EXTRA_TEXT, effect.url)
                     }
                     context.startActivity(Intent.createChooser(intent, null))
                 }
-
-                RecipeDetailContract.SideEffect.AddedToShoppingList ->
-                    Toast.makeText(context, addedMessage, Toast.LENGTH_SHORT).show()
             }
         }
 
         LaunchedEffect(recipeId) {
             viewModel.onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.Load(recipeId))
+        }
+
+        RetryWhenOnline(hasError = state.hasError) {
+            viewModel.onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.Retry)
         }
 
         RecipeDetailContent(state, viewModel::onEventDispatcher)
@@ -138,14 +144,28 @@ class RecipeDetailScreen(
         val colors = MaterialTheme.oshxona
         val recipe = state.recipe
 
-        if (state.notFound || recipe == null) {
-            NotFoundContent(state, onEventDispatcher)
+        if (recipe == null) {
+            DetailStatusContent(state, onEventDispatcher)
             return
         }
 
         val hazeState = rememberHazeState()
         val scaffoldState = rememberBottomSheetScaffoldState()
         val shownSelection = rememberLastNonNull(state.shoppingSelection)
+        var fullscreenView by remember { mutableStateOf<View?>(null) }
+        var exitFullscreen by remember { mutableStateOf<(() -> Unit)?>(null) }
+
+        VideoFullscreenEffect(enabled = fullscreenView != null)
+
+        BackHandler(enabled = fullscreenView != null) {
+            exitFullscreen?.invoke()
+        }
+
+        BackHandler(enabled = fullscreenView == null && state.videoId != null) {
+            onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.CloseVideo)
+        }
+
+        val statusBarTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
         BoxWithConstraints(
             modifier = Modifier
@@ -153,10 +173,16 @@ class RecipeDetailScreen(
                 .background(colors.ground)
         ) {
             val screenHeight = maxHeight
+            val videoAreaHeight = statusBarTop + maxWidth * 9f / 16f + Sizes.touchTarget + Spacing.sm * 2
+            val sheetPeekHeight = if (state.videoId == null) {
+                screenHeight * 0.5f
+            } else {
+                (screenHeight - videoAreaHeight).coerceIn(screenHeight * 0.3f, screenHeight * 0.5f)
+            }
 
             BottomSheetScaffold(
                 scaffoldState = scaffoldState,
-                sheetPeekHeight = screenHeight * 0.5f,
+                sheetPeekHeight = sheetPeekHeight,
                 sheetShape = SheetShape,
                 sheetContainerColor = Color.Transparent,
                 sheetContentColor = colors.ink,
@@ -176,13 +202,24 @@ class RecipeDetailScreen(
             ) {
                 HeroLayer(
                     recipe = recipe,
+                    videoId = state.videoId,
                     hazeState = hazeState,
                     screenHeight = screenHeight,
+                    onEnterFullscreen = { view, exit ->
+                        fullscreenView = view
+                        exitFullscreen = exit
+                    },
+                    onExitFullscreen = {
+                        fullscreenView = null
+                        exitFullscreen = null
+                    },
                     onEventDispatcher = onEventDispatcher
                 )
             }
 
-            TopActions(recipe, hazeState, onEventDispatcher)
+            if (state.videoId == null) {
+                TopActions(recipe, hazeState, onEventDispatcher)
+            }
 
             Box(
                 modifier = Modifier
@@ -196,12 +233,14 @@ class RecipeDetailScreen(
                     .navigationBarsPadding()
                     .padding(start = Spacing.md, end = Spacing.md, top = Spacing.lg, bottom = Spacing.sm)
             ) {
-                PrimaryButton(
-                    text = stringResource(R.string.detail_start_cooking),
-                    onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.StartCooking) },
-                    leadingIcon = Icons.Rounded.PlayArrow,
-                    shape = Shapes.pill
-                )
+                if (recipe.steps.isNotEmpty()) {
+                    PrimaryButton(
+                        text = stringResource(R.string.detail_start_cooking),
+                        onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.StartCooking) },
+                        leadingIcon = Icons.Rounded.PlayArrow,
+                        shape = Shapes.pill
+                    )
+                }
             }
 
             GlassBottomSheet(
@@ -216,14 +255,19 @@ class RecipeDetailScreen(
                     onEventDispatcher = onEventDispatcher
                 )
             }
+
+            fullscreenView?.let { view -> FullscreenVideoContainer(view = view) }
         }
     }
 
     @Composable
     private fun HeroLayer(
         recipe: RecipeDetailUiData,
+        videoId: String?,
         hazeState: HazeState,
         screenHeight: Dp,
+        onEnterFullscreen: (View, () -> Unit) -> Unit,
+        onExitFullscreen: () -> Unit,
         onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
     ) {
         val colors = MaterialTheme.oshxona
@@ -256,7 +300,7 @@ class RecipeDetailScreen(
                             )
                         )
                 )
-                if (recipe.hasVideo) {
+                if (recipe.hasVideo && videoId == null) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
@@ -265,7 +309,7 @@ class RecipeDetailScreen(
                             .clip(CircleShape)
                             .background(colors.accent)
                             .scaleClickable {
-                                onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenInBrowser)
+                                onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.PlayVideo)
                             },
                         contentAlignment = Alignment.Center
                     ) {
@@ -274,6 +318,47 @@ class RecipeDetailScreen(
                             contentDescription = stringResource(R.string.cd_play),
                             tint = Overlay,
                             modifier = Modifier.size(Sizes.icon + 6.dp)
+                        )
+                    }
+                }
+            }
+            if (videoId != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(screenHeight * 0.55f)
+                        .background(Color.Black)
+                        .statusBarsPadding()
+                ) {
+                    YouTubeVideoPlayer(
+                        videoId = videoId,
+                        onError = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.VideoFailed) },
+                        onEnterFullscreen = onEnterFullscreen,
+                        onExitFullscreen = onExitFullscreen
+                    )
+                    Row(
+                        modifier = Modifier
+                            .padding(Spacing.sm)
+                            .height(Sizes.touchTarget)
+                            .clip(Shapes.pill)
+                            .background(Color.White.copy(alpha = 0.14f))
+                            .scaleClickable {
+                                onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.CloseVideo)
+                            }
+                            .padding(horizontal = Spacing.md),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.xs)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Rounded.Close,
+                            contentDescription = null,
+                            tint = Color.White,
+                            modifier = Modifier.size(Sizes.iconSm)
+                        )
+                        Text(
+                            text = stringResource(R.string.detail_close_video),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = Color.White
                         )
                     }
                 }
@@ -370,15 +455,27 @@ class RecipeDetailScreen(
                     Spacer(Modifier.size(Spacing.lg))
                     MetaRow(recipe)
                     Spacer(Modifier.size(Spacing.lg))
-                    IngredientsHeader(onEventDispatcher)
+                    if (recipe.ingredientCount > 0) {
+                        IngredientsHeader(onEventDispatcher)
+                    } else if (recipe.steps.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.detail_no_content),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.inkMuted
+                        )
+                    }
                 }
 
-                items(items = recipe.ingredients, key = { ingredient ->
-                    when (ingredient) {
-                        is IngredientUiData.Heading -> "heading_${ingredient.text}"
-                        is IngredientUiData.Item -> "item_${ingredient.id}"
-                    }
-                }) { ingredient ->
+                itemsIndexed(
+                    items = recipe.ingredients,
+                    key = { index, ingredient ->
+                        when (ingredient) {
+                            is IngredientUiData.Heading -> "heading_$index"
+                            is IngredientUiData.Item -> "item_${ingredient.id}"
+                        }
+                    },
+                    contentType = { _, ingredient -> ingredient::class }
+                ) { _, ingredient ->
                     when (ingredient) {
                         is IngredientUiData.Heading -> IngredientGroupHeader(text = ingredient.text)
                         is IngredientUiData.Item -> IngredientRow(
@@ -396,8 +493,6 @@ class RecipeDetailScreen(
                     Spacer(Modifier.size(Spacing.lg))
                     HorizontalDivider(color = colors.hairline)
                     Spacer(Modifier.size(Spacing.lg))
-                    PreparationSummary(recipe, onEventDispatcher)
-                    Spacer(Modifier.size(Spacing.xl))
                 }
 
                 if (state.related.isNotEmpty()) {
@@ -409,7 +504,7 @@ class RecipeDetailScreen(
                         )
                         Spacer(Modifier.size(Spacing.sm))
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(Spacing.sm)) {
-                            items(items = state.related, key = { it.id }) { related ->
+                            items(items = state.related, key = { it.id }, contentType = { CONTENT_RECIPE }) { related ->
                                 RecipeGridCard(
                                     recipe = related,
                                     onClick = {
@@ -417,7 +512,11 @@ class RecipeDetailScreen(
                                             RecipeDetailContract.RecipeDetailEvent.OpenRecipe(related.id)
                                         )
                                     },
-                                    onBookmarkClick = { },
+                                    onBookmarkClick = {
+                                        onEventDispatcher(
+                                            RecipeDetailContract.RecipeDetailEvent.ToggleRelatedFavorite(related)
+                                        )
+                                    },
                                     modifier = Modifier.width(164.dp)
                                 )
                             }
@@ -575,69 +674,6 @@ class RecipeDetailScreen(
     }
 
     @Composable
-    private fun PreparationSummary(
-        recipe: RecipeDetailUiData,
-        onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
-    ) {
-        val colors = MaterialTheme.oshxona
-        val timedSteps = recipe.steps.filter { it.timerMinutes != null }
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(Shapes.card)
-                .background(colors.surface)
-                .scaleClickable { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.StartCooking) }
-                .padding(Spacing.md),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(Sizes.categoryIconBox)
-                    .clip(Shapes.image)
-                    .background(colors.accentTint),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Rounded.Restaurant,
-                    contentDescription = null,
-                    tint = colors.accentInk,
-                    modifier = Modifier.size(Sizes.icon)
-                )
-            }
-            Spacer(Modifier.size(Spacing.sm))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.detail_steps),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.ink
-                )
-                Text(
-                    text = stringResource(R.string.detail_steps_count, recipe.steps.size),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = colors.inkMuted
-                )
-                if (timedSteps.isNotEmpty()) {
-                    Text(
-                        text = stringResource(
-                            R.string.detail_timers_summary,
-                            timedSteps.size,
-                            timedSteps.sumOf { it.timerMinutes ?: 0 }
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = colors.inkFaint
-                    )
-                }
-            }
-            Icon(
-                imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                contentDescription = null,
-                tint = colors.primaryInk,
-                modifier = Modifier.size(Sizes.icon)
-            )
-        }
-    }
-
-    @Composable
     private fun ShoppingSheet(
         recipe: RecipeDetailUiData,
         selection: Set<Int>,
@@ -677,12 +713,16 @@ class RecipeDetailScreen(
                 )
             }
             LazyColumn(modifier = Modifier.heightIn(max = maxListHeight)) {
-                items(items = recipe.ingredients, key = { ingredient ->
-                    when (ingredient) {
-                        is IngredientUiData.Heading -> "shop_heading_${ingredient.text}"
-                        is IngredientUiData.Item -> "shop_item_${ingredient.id}"
-                    }
-                }) { ingredient ->
+                itemsIndexed(
+                    items = recipe.ingredients,
+                    key = { index, ingredient ->
+                        when (ingredient) {
+                            is IngredientUiData.Heading -> "shop_heading_$index"
+                            is IngredientUiData.Item -> "shop_item_${ingredient.id}"
+                        }
+                    },
+                    contentType = { _, ingredient -> ingredient::class }
+                ) { _, ingredient ->
                     when (ingredient) {
                         is IngredientUiData.Heading -> IngredientGroupHeader(text = ingredient.text)
                         is IngredientUiData.Item -> IngredientRow(
@@ -709,7 +749,7 @@ class RecipeDetailScreen(
     }
 
     @Composable
-    private fun NotFoundContent(
+    private fun DetailStatusContent(
         state: RecipeDetailContract.RecipeDetailUiState,
         onEventDispatcher: (RecipeDetailContract.RecipeDetailEvent) -> Unit
     ) {
@@ -733,48 +773,22 @@ class RecipeDetailScreen(
                     onClick = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.Back) }
                 )
             }
-            val goHome: () -> Unit = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenHome) }
-            val openBrowser: () -> Unit = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenInBrowser) }
-            NotFoundStateView(
-                title = stringResource(R.string.detail_notfound_title),
-                body = stringResource(R.string.detail_notfound_body),
-                primaryAction = stringResource(R.string.detail_go_home) to goHome,
-                secondaryAction = stringResource(R.string.common_open_in_browser) to openBrowser
-            )
-            if (state.related.isNotEmpty()) {
-                Column(modifier = Modifier.padding(horizontal = Spacing.md)) {
-                    Text(
-                        text = stringResource(R.string.detail_suggestions),
-                        style = MaterialTheme.typography.titleLarge,
-                        color = colors.ink
+            when {
+                state.notFound -> {
+                    val goHome: () -> Unit = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenHome) }
+                    NotFoundStateView(
+                        title = stringResource(R.string.detail_notfound_title),
+                        body = stringResource(R.string.detail_notfound_body),
+                        primaryAction = stringResource(R.string.detail_go_home) to goHome
                     )
-                    Spacer(Modifier.size(Spacing.sm))
-                    state.related.take(2).forEach { suggestion ->
-                        RecipeListCard(
-                            recipe = suggestion,
-                            onClick = {
-                                onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.OpenRecipe(suggestion.id))
-                            },
-                            onBookmarkClick = { },
-                            modifier = Modifier.padding(bottom = Spacing.sm)
-                        )
-                    }
                 }
-            }
-        }
-    }
 
-    @ThemePreview
-    @Composable
-    private fun RecipeDetailPreview() {
-        OshxonaTheme {
-            RecipeDetailContent(
-                state = RecipeDetailContract.RecipeDetailUiState(
-                    recipe = SampleData.recipeDetail,
-                    related = SampleData.recipes.filter { it.categoryKey == "gosht" }
-                ),
-                onEventDispatcher = { }
-            )
+                state.hasError -> ErrorStateView(
+                    onRetry = { onEventDispatcher(RecipeDetailContract.RecipeDetailEvent.Retry) }
+                )
+
+                else -> RecipeDetailSkeleton(modifier = Modifier.fillMaxSize())
+            }
         }
     }
 }

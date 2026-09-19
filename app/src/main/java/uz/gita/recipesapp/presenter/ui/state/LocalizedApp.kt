@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
+import uz.gita.recipesapp.domain.module.AppLanguage
 import java.util.Locale
 
 private class LocalizedContext(

@@ -1,4 +1,4 @@
-package uz.gita.recipesapp.presenter.ui.state
+package uz.gita.recipesapp.domain.module
 
 enum class ThemeMode {
     LIGHT,

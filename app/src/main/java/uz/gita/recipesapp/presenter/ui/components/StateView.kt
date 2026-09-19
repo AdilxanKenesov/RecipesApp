@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.CloudOff
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.SearchOff
 import androidx.compose.material3.Icon
@@ -33,17 +32,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import uz.gita.recipesapp.R
-import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
-import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 
 @Composable
 fun StateView(
     icon: ImageVector,
     title: String,
-    body: String,
+    body: String? = null,
     modifier: Modifier = Modifier,
     tint: androidx.compose.ui.graphics.Color? = null,
     primaryAction: Pair<String, () -> Unit>? = null,
@@ -69,13 +66,15 @@ fun StateView(
             color = colors.ink,
             textAlign = TextAlign.Center
         )
-        Spacer(Modifier.size(Spacing.xs))
-        Text(
-            text = body,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.inkMuted,
-            textAlign = TextAlign.Center
-        )
+        if (body != null) {
+            Spacer(Modifier.size(Spacing.xs))
+            Text(
+                text = body,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.inkMuted,
+                textAlign = TextAlign.Center
+            )
+        }
         if (primaryAction != null) {
             Spacer(Modifier.size(Spacing.lg))
             PrimaryButton(text = primaryAction.first, onClick = primaryAction.second)
@@ -105,23 +104,6 @@ fun ErrorStateView(
 }
 
 @Composable
-fun OfflineStateView(
-    modifier: Modifier = Modifier,
-    onRetry: () -> Unit,
-    onOpenSaved: (() -> Unit)? = null,
-) {
-    StateView(
-        icon = Icons.Rounded.CloudOff,
-        title = stringResource(R.string.state_offline_title),
-        body = stringResource(R.string.state_offline_body),
-        tint = MaterialTheme.oshxona.accentInk,
-        primaryAction = stringResource(R.string.common_retry) to onRetry,
-        secondaryAction = onOpenSaved?.let { stringResource(R.string.state_open_cache) to it },
-        modifier = modifier
-    )
-}
-
-@Composable
 fun NotFoundStateView(
     title: String,
     body: String,
@@ -137,47 +119,6 @@ fun NotFoundStateView(
         secondaryAction = secondaryAction,
         modifier = modifier
     )
-}
-
-@Composable
-fun OfflineBanner(
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val colors = MaterialTheme.oshxona
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(Shapes.input)
-            .background(colors.accentTint)
-            .padding(horizontal = Spacing.md, vertical = Spacing.sm),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Rounded.CloudOff,
-                contentDescription = null,
-                tint = colors.accentInk,
-                modifier = Modifier.size(Sizes.iconSm)
-            )
-            Spacer(Modifier.size(Spacing.xs))
-            Text(
-                text = stringResource(R.string.offline_banner),
-                style = MaterialTheme.typography.labelMedium,
-                color = colors.accentInk
-            )
-        }
-        Text(
-            text = stringResource(R.string.common_retry_short),
-            style = MaterialTheme.typography.labelMedium,
-            color = colors.primaryInk,
-            modifier = Modifier
-                .clip(Shapes.pill)
-                .scaleClickable(onClick = onRetry)
-                .padding(horizontal = Spacing.sm, vertical = Spacing.xs)
-        )
-    }
 }
 
 enum class PagingFooterState {

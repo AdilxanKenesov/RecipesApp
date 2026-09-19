@@ -34,7 +34,7 @@ import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
 import uz.gita.recipesapp.presenter.ui.components.PrimaryButton
 import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.state.AppLanguage
+import uz.gita.recipesapp.domain.module.AppLanguage
 import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Sizes

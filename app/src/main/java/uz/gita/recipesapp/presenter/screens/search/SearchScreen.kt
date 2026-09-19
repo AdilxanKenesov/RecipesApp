@@ -33,9 +33,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.hilt.getViewModel
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
@@ -53,12 +55,12 @@ import uz.gita.recipesapp.presenter.ui.components.SearchBar
 import uz.gita.recipesapp.presenter.ui.components.SectionHeader
 import uz.gita.recipesapp.presenter.ui.components.SegmentedControl
 import uz.gita.recipesapp.presenter.ui.components.SelectableChip
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
+import uz.gita.recipesapp.presenter.ui.components.rememberShimmer
 import uz.gita.recipesapp.presenter.ui.theme.Shapes
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
 import uz.gita.recipesapp.presenter.ui.theme.oshxona
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_RECIPE
+import uz.gita.recipesapp.presenter.ui.util.RetryWhenOnline
 import uz.gita.recipesapp.presenter.ui.util.scaleClickable
 
 class SearchScreen : Screen {
@@ -67,10 +69,11 @@ class SearchScreen : Screen {
     override fun Content() {
         val viewModel: SearchContract.SearchViewModel = getViewModel<SearchViewModel>()
         val state by viewModel.collectAsState()
-        val pagerState = rememberPagerState(initialPage = state.mode.pageIndex()) { 2 }
+        val pagerState = rememberPagerState(initialPage = state.mode.
+        pageIndex()) { 2 }
 
         LaunchedEffect(pagerState) {
-            snapshotFlow { pagerState.settledPage }.collect { page ->
+            snapshotFlow { pagerState.settledPage }.drop(1).collect { page ->
                 viewModel.onEventDispatcher(SearchContract.SearchEvent.ModeChanged(modeOf(page)))
             }
         }
@@ -78,6 +81,10 @@ class SearchScreen : Screen {
         LaunchedEffect(state.mode) {
             val target = state.mode.pageIndex()
             if (pagerState.settledPage != target) pagerState.animateScrollToPage(target)
+        }
+
+        RetryWhenOnline(hasError = state.hasError) {
+            viewModel.onEventDispatcher(SearchContract.SearchEvent.Retry)
         }
 
         SearchContent(state, pagerState, viewModel::onEventDispatcher)
@@ -147,7 +154,8 @@ class SearchScreen : Screen {
                         modifier = Modifier.padding(horizontal = Spacing.md),
                         verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                     ) {
-                        repeat(4) { RecipeListCardSkeleton() }
+                        val shimmer = rememberShimmer()
+                        repeat(4) { RecipeListCardSkeleton(shimmer = shimmer) }
                     }
 
                     state.showNameNotFound -> SearchNotFound()
@@ -248,7 +256,7 @@ class SearchScreen : Screen {
                         horizontalArrangement = Arrangement.spacedBy(Spacing.xs),
                         verticalArrangement = Arrangement.spacedBy(Spacing.xs)
                     ) {
-                        state.quickIngredients.forEach { name ->
+                        stringArrayResource(R.array.search_quick_ingredients).forEach { name ->
                             SelectableChip(
                                 text = name,
                                 selected = name in state.ingredients,
@@ -290,12 +298,12 @@ class SearchScreen : Screen {
                         )
                     }
 
-                    items(items = state.ingredientResults, key = { "result_${it.id}" }) { recipe ->
+                    items(items = state.ingredientResults, key = { "result_${it.id}" }, contentType = { CONTENT_RECIPE }) { recipe ->
                         RecipeListCard(
                             recipe = recipe,
                             onClick = { onEventDispatcher(SearchContract.SearchEvent.OpenRecipe(recipe.id)) },
                             onBookmarkClick = {
-                                onEventDispatcher(SearchContract.SearchEvent.ToggleFavorite(recipe.id))
+                                onEventDispatcher(SearchContract.SearchEvent.ToggleFavorite(recipe))
                             },
                             modifier = Modifier
                                 .padding(horizontal = Spacing.md)
@@ -343,12 +351,12 @@ class SearchScreen : Screen {
                 Spacer(Modifier.size(Spacing.sm))
             }
 
-            items(items = results, key = { it.id }) { recipe ->
+            items(items = results, key = { it.id }, contentType = { CONTENT_RECIPE }) { recipe ->
                 RecipeListCard(
                     recipe = recipe,
                     onClick = { onEventDispatcher(SearchContract.SearchEvent.OpenRecipe(recipe.id)) },
                     onBookmarkClick = {
-                        onEventDispatcher(SearchContract.SearchEvent.ToggleFavorite(recipe.id))
+                        onEventDispatcher(SearchContract.SearchEvent.ToggleFavorite(recipe))
                     },
                     modifier = Modifier.padding(bottom = Spacing.sm)
                 )
@@ -456,22 +464,6 @@ class SearchScreen : Screen {
                 Spacer(Modifier.size(Spacing.lg))
             }
 
-        }
-    }
-
-    @ThemePreview
-    @Composable
-    private fun SearchPreview() {
-        OshxonaTheme {
-            SearchContent(
-                pagerState = rememberPagerState { 2 },
-                state = SearchContract.SearchUiState(
-                    recent = SampleData.recentSearches,
-                    quickIngredients = SampleData.quickIngredients,
-                    categories = SampleData.categories.filter { it.count > 0 }
-                ),
-                onEventDispatcher = { }
-            )
         }
     }
 }

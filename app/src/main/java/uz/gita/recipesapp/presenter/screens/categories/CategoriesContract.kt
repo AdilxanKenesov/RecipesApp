@@ -14,7 +14,7 @@ interface CategoriesContract {
     }
 
     data class CategoriesUiState(
-        val isLoading: Boolean = false,
+        val isLoading: Boolean = true,
         val hasError: Boolean = false,
         val categories: List<CategoryUiData> = emptyList()
     ) {

@@ -1,29 +1,25 @@
 package uz.gita.recipesapp.presenter.screens.allrecipes
 
+import androidx.paging.PagingData
+import kotlinx.coroutines.flow.Flow
 import org.orbitmvi.orbit.OrbitContainerHost
 import uz.gita.recipesapp.domain.module.RecipeUiData
-import uz.gita.recipesapp.presenter.ui.components.PagingFooterState
 
 interface AllRecipesContract {
     interface AllRecipesViewModel : OrbitContainerHost<AllRecipesUiState, AllRecipesUiState, SideEffect> {
+        val recipes: Flow<PagingData<RecipeUiData>>
+
         fun onEventDispatcher(event: AllRecipesEvent)
     }
 
     sealed interface AllRecipesEvent {
         data class OpenRecipe(val recipeId: Int) : AllRecipesEvent
-        data class ToggleFavorite(val recipeId: Int) : AllRecipesEvent
-        data object LoadMore : AllRecipesEvent
-        data object Retry : AllRecipesEvent
+        data class ToggleFavorite(val recipe: RecipeUiData) : AllRecipesEvent
+        data class LoadFailed(val error: Throwable) : AllRecipesEvent
         data object Back : AllRecipesEvent
     }
 
-    data class AllRecipesUiState(
-        val isLoading: Boolean = false,
-        val hasError: Boolean = false,
-        val recipes: List<RecipeUiData> = emptyList(),
-        val totalCount: Int = 0,
-        val footerState: PagingFooterState = PagingFooterState.Idle
-    )
+    data object AllRecipesUiState
 
     sealed interface SideEffect
 

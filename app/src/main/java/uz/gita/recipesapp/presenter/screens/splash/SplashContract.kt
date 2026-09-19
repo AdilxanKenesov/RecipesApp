@@ -19,6 +19,5 @@ interface SplashContract {
 
     interface Direction {
         fun openIntro()
-        fun openHome()
     }
 }

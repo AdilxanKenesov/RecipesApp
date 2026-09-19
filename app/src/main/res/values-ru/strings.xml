@@ -5,18 +5,14 @@
     <string name="cd_back">Назад</string>
     <string name="cd_share">Поделиться</string>
     <string name="cd_settings">Настройки</string>
-    <string name="cd_search">Поиск</string>
     <string name="cd_play">Открыть видео</string>
     <string name="cd_bookmark_add">Добавить в избранное</string>
     <string name="cd_bookmark_remove">Убрать из избранного</string>
     <string name="cd_clear">Очистить</string>
     <string name="cd_remove">Удалить</string>
-    <string name="cd_shuffle">Другой рецепт</string>
 
     <string name="common_retry">Повторить попытку</string>
-    <string name="common_retry_short">Повторить</string>
     <string name="common_all">Все</string>
-    <string name="common_open_in_browser">Открыть в браузере</string>
 
     <string name="nav_home">Главная</string>
     <string name="nav_categories">Категории</string>
@@ -49,10 +45,9 @@
     <string name="home_fridge_body">Укажите продукты — подберём подходящие рецепты.</string>
     <string name="home_fridge_action">Искать по продуктам</string>
     <string name="home_recipes">Рецепты</string>
-    <string name="home_all_recipes">Все %1$d рецептов</string>
+    <string name="home_all_recipes">Все рецепты</string>
 
     <string name="all_recipes_title">Все рецепты</string>
-    <string name="all_recipes_total">%1$d рецептов</string>
 
     <string name="categories_title">Категории</string>
     <string name="categories_empty_section">Пока пусто</string>
@@ -77,23 +72,18 @@
     <string name="search_ingredient_empty">Напишите, что есть дома, или выберите ниже — подберём рецепты из этих продуктов.</string>
 
     <string name="detail_ingredients">Ингредиенты</string>
-    <string name="detail_steps">Приготовление</string>
     <string name="detail_more_from">Ещё из раздела «%1$s»</string>
     <string name="detail_add_to_shopping">Добавить в список ингредиентов</string>
     <string name="detail_added_to_shopping">Добавлено в список ингредиентов</string>
     <string name="detail_timer">Таймер на %1$d мин</string>
-    <string name="detail_meta_ingredients">%1$d ингредиентов</string>
-    <string name="detail_meta_steps">%1$d шагов</string>
     <string name="detail_notfound_title">Рецепт не найден</string>
     <string name="detail_notfound_body">Этот рецепт удалён или ссылка неверна.</string>
     <string name="detail_go_home">На главную</string>
-    <string name="detail_suggestions">Вместо него</string>
 
     <string name="detail_author">Автор</string>
     <string name="detail_meta_ingredients_label">Ингредиенты</string>
     <string name="detail_meta_steps_label">Шаги</string>
     <string name="detail_meta_category_label">Категория</string>
-    <string name="timer_title">Таймер: шаг %1$d</string>
     <string name="timer_start">Старт</string>
     <string name="timer_pause">Пауза</string>
     <string name="timer_resume">Продолжить</string>
@@ -103,13 +93,12 @@
     <string name="shopping_select_all">Выбрать все</string>
     <string name="shopping_clear_selection">Снять выбор</string>
     <string name="shopping_confirm">Добавить: %1$d</string>
+    <string name="cd_zoom_image">Увеличить фото</string>
     <string name="cd_close">Закрыть</string>
 
     <string name="detail_add_to_list_short">В список</string>
     <string name="detail_ingredients_hint">Отметьте, что есть дома, — остальное добавим в список</string>
     <string name="detail_start_cooking">Начать готовить</string>
-    <string name="detail_steps_count">Шагов: %1$d</string>
-    <string name="detail_timers_summary">Таймеры: %1$d · всего %2$d мин</string>
     <string name="cooking_step_label">Шаг %1$d</string>
     <string name="cooking_progress">%1$d / %2$d</string>
     <string name="cooking_next">Далее</string>
@@ -123,13 +112,11 @@
     <string name="saved_title">Сохранённое</string>
     <string name="saved_tab_favorites">Избранное</string>
     <string name="saved_tab_shopping">Список</string>
-    <string name="saved_favorites_hint">Избранное открывается и без интернета</string>
-    <string name="saved_shopping_clear">Очистить список</string>
+    <string name="saved_shopping_clear">Очистить</string>
     <string name="saved_empty_favorites_title">В избранном пусто</string>
-    <string name="saved_empty_favorites_body">Сохраните понравившийся рецепт кнопкой закладки — он появится здесь.</string>
     <string name="saved_empty_shopping_title">Список пуст</string>
-    <string name="saved_empty_shopping_body">Добавьте ингредиенты, которых нет дома, — в магазине отмечайте их здесь.</string>
-    <string name="saved_empty_browse">Смотреть рецепты</string>
+    <string name="saved_shopping_ready">Всё куплено</string>
+    <string name="saved_shopping_cook">Начать готовить</string>
     <string name="saved_empty_categories">Перейти к категориям</string>
 
     <string name="settings_title">Настройки</string>
@@ -142,11 +129,27 @@
     <string name="state_error_body">Не удалось загрузить рецепты. Проверьте сеть и повторите попытку.</string>
     <string name="state_empty_title">Пока пусто</string>
     <string name="state_empty_body">Здесь ещё нет рецептов.</string>
-    <string name="state_offline_title">Нет интернета</string>
-    <string name="state_offline_body">Сохранённые рецепты доступны, остальное загрузится при появлении сети.</string>
-    <string name="state_open_cache">Открыть сохранённые</string>
-    <string name="offline_banner">Режим без интернета</string>
 
     <string name="paging_end">Показано всё</string>
     <string name="paging_error">Ошибка загрузки</string>
+
+    <string name="detail_no_content">Для этого рецепта ещё не добавлены ингредиенты и шаги приготовления</string>
+    <string name="detail_close_video">Закрыть видео</string>
+    <string name="video_unavailable">Это видео нельзя воспроизвести в приложении</string>
+    <string name="error_no_internet">Нет подключения к интернету</string>
+    <string name="error_server_unreachable">Не удалось подключиться к серверу</string>
+    <string name="error_unknown">Что-то пошло не так. Попробуйте ещё раз</string>
+
+    <string-array name="search_quick_ingredients">
+        <item>яйца</item>
+        <item>лук</item>
+        <item>чеснок</item>
+        <item>помидор</item>
+        <item>морковь</item>
+        <item>рис</item>
+        <item>сыр</item>
+        <item>сахар</item>
+        <item>фарш</item>
+        <item>перец</item>
+    </string-array>
 </resources>

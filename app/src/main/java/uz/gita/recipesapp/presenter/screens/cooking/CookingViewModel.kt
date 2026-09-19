@@ -5,13 +5,16 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import org.orbitmvi.orbit.viewmodel.orbitContainer
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
+import uz.gita.recipesapp.domain.usecase.cooking.CookingUseCase
+import uz.gita.recipesapp.presenter.ui.state.AppMessenger
 import uz.gita.recipesapp.presenter.ui.util.cleanRecipeTitle
 import javax.inject.Inject
 
 @HiltViewModel
 class CookingViewModel @Inject constructor(
-    private val direction: CookingContract.Direction
+    private val direction: CookingContract.Direction,
+    private val cookingUseCase: CookingUseCase,
+    private val messenger: AppMessenger
 ) : ViewModel(), CookingContract.CookingViewModel {
 
     private var timerJob: Job? = null
@@ -20,8 +23,18 @@ class CookingViewModel @Inject constructor(
         when (event) {
             is CookingContract.CookingEvent.Load -> intent {
                 if (state.steps.isNotEmpty()) return@intent
-                val recipe = SampleData.recipeDetail
-                reduce { state.copy(title = recipe.title.cleanRecipeTitle(), steps = recipe.steps) }
+                cookingUseCase.getRecipe(event.recipeId)
+                    .onSuccess { recipe ->
+                        if (recipe.steps.isEmpty()) {
+                            direction.back()
+                            return@onSuccess
+                        }
+                        reduce { state.copy(title = recipe.title.cleanRecipeTitle(), steps = recipe.steps) }
+                    }
+                    .onFailure { error ->
+                        messenger.showError(error)
+                        direction.back()
+                    }
             }
 
             is CookingContract.CookingEvent.PageChanged -> intent {

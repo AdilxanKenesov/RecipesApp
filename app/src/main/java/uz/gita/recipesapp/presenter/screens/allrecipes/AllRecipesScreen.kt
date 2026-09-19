@@ -1,54 +1,62 @@
 package uz.gita.recipesapp.presenter.screens.allrecipes
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.paging.LoadState
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemContentType
+import androidx.paging.compose.itemKey
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.hilt.getViewModel
-import org.orbitmvi.orbit.compose.collectAsState
 import uz.gita.recipesapp.R
+import uz.gita.recipesapp.domain.module.RecipeUiData
 import uz.gita.recipesapp.presenter.ui.components.ErrorStateView
 import uz.gita.recipesapp.presenter.ui.components.OshxonaScaffold
 import uz.gita.recipesapp.presenter.ui.components.PagingFooter
 import uz.gita.recipesapp.presenter.ui.components.RecipeGridCard
 import uz.gita.recipesapp.presenter.ui.components.RecipeGridCardSkeleton
 import uz.gita.recipesapp.presenter.ui.components.ScreenTopBar
-import uz.gita.recipesapp.presenter.ui.preview.SampleData
-import uz.gita.recipesapp.presenter.ui.preview.ThemePreview
-import uz.gita.recipesapp.presenter.ui.theme.OshxonaTheme
+import uz.gita.recipesapp.presenter.ui.components.rememberShimmer
 import uz.gita.recipesapp.presenter.ui.theme.Spacing
-import uz.gita.recipesapp.presenter.ui.theme.oshxona
+import uz.gita.recipesapp.presenter.ui.util.CONTENT_RECIPE
+import uz.gita.recipesapp.presenter.ui.util.RetryWhenOnline
+import uz.gita.recipesapp.presenter.ui.util.toFooterState
 
 class AllRecipesScreen : Screen {
 
     @Composable
     override fun Content() {
         val viewModel: AllRecipesContract.AllRecipesViewModel = getViewModel<AllRecipesViewModel>()
-        val state by viewModel.collectAsState()
+        val recipes = viewModel.recipes.collectAsLazyPagingItems()
 
-        AllRecipesContent(state, viewModel::onEventDispatcher)
+        AllRecipesContent(recipes, viewModel::onEventDispatcher)
     }
 
     @Composable
     private fun AllRecipesContent(
-        state: AllRecipesContract.AllRecipesUiState,
+        recipes: LazyPagingItems<RecipeUiData>,
         onEventDispatcher: (AllRecipesContract.AllRecipesEvent) -> Unit
     ) {
-        val colors = MaterialTheme.oshxona
+        val refreshState = recipes.loadState.refresh
+        val loadError = (refreshState as? LoadState.Error ?: recipes.loadState.append as? LoadState.Error)?.error
+        val retry: () -> Unit = { recipes.retry() }
+
+        RetryWhenOnline(hasError = loadError != null, onRetry = retry)
+
+        LaunchedEffect(loadError) {
+            loadError?.let { onEventDispatcher(AllRecipesContract.AllRecipesEvent.LoadFailed(it)) }
+        }
 
         OshxonaScaffold(
             topBar = {
@@ -59,18 +67,20 @@ class AllRecipesScreen : Screen {
             }
         ) {
             when {
-                state.hasError -> ErrorStateView(
-                    onRetry = { onEventDispatcher(AllRecipesContract.AllRecipesEvent.Retry) }
-                )
+                refreshState is LoadState.Error && recipes.itemCount == 0 -> ErrorStateView(onRetry = retry)
 
-                state.isLoading -> LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(horizontal = Spacing.md),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
-                    verticalArrangement = Arrangement.spacedBy(Spacing.sm)
-                ) {
-                    items(items = (1..6).toList()) { RecipeGridCardSkeleton() }
+                refreshState is LoadState.Loading && recipes.itemCount == 0 -> {
+                    val shimmer = rememberShimmer()
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(2),
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(horizontal = Spacing.md),
+                        horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        verticalArrangement = Arrangement.spacedBy(Spacing.sm),
+                        userScrollEnabled = false
+                    ) {
+                        items(count = 6) { RecipeGridCardSkeleton(shimmer = shimmer) }
+                    }
                 }
 
                 else -> LazyVerticalGrid(
@@ -84,52 +94,33 @@ class AllRecipesScreen : Screen {
                     horizontalArrangement = Arrangement.spacedBy(Spacing.sm),
                     verticalArrangement = Arrangement.spacedBy(Spacing.sm)
                 ) {
-                    item(span = { GridItemSpan(2) }) {
-                        Column {
-                            Text(
-                                text = stringResource(R.string.all_recipes_total, state.totalCount),
-                                style = MaterialTheme.typography.labelMedium,
-                                color = colors.inkMuted
+                    items(
+                        count = recipes.itemCount,
+                        key = recipes.itemKey { it.id },
+                        contentType = recipes.itemContentType { CONTENT_RECIPE }
+                    ) { index ->
+                        recipes[index]?.let { recipe ->
+                            RecipeGridCard(
+                                recipe = recipe,
+                                onClick = {
+                                    onEventDispatcher(AllRecipesContract.AllRecipesEvent.OpenRecipe(recipe.id))
+                                },
+                                onBookmarkClick = {
+                                    onEventDispatcher(AllRecipesContract.AllRecipesEvent.ToggleFavorite(recipe))
+                                }
                             )
-                            Spacer(Modifier.size(Spacing.xs))
                         }
-                    }
-
-                    items(items = state.recipes, key = { it.id }) { recipe ->
-                        RecipeGridCard(
-                            recipe = recipe,
-                            onClick = {
-                                onEventDispatcher(AllRecipesContract.AllRecipesEvent.OpenRecipe(recipe.id))
-                            },
-                            onBookmarkClick = {
-                                onEventDispatcher(AllRecipesContract.AllRecipesEvent.ToggleFavorite(recipe.id))
-                            }
-                        )
                     }
 
                     item(span = { GridItemSpan(2) }) {
                         PagingFooter(
-                            state = state.footerState,
-                            onRetry = { onEventDispatcher(AllRecipesContract.AllRecipesEvent.Retry) },
+                            state = recipes.loadState.append.toFooterState(),
+                            onRetry = retry,
                             modifier = Modifier.padding(top = Spacing.sm)
                         )
                     }
                 }
             }
-        }
-    }
-
-    @ThemePreview
-    @Composable
-    private fun AllRecipesPreview() {
-        OshxonaTheme {
-            AllRecipesContent(
-                state = AllRecipesContract.AllRecipesUiState(
-                    recipes = SampleData.recipes,
-                    totalCount = SampleData.totalRecipeCount
-                ),
-                onEventDispatcher = { }
-            )
         }
     }
 }
